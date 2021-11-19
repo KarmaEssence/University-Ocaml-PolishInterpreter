@@ -1,5 +1,3 @@
-
-
 (** Projet Polish -- Analyse statique d'un mini-langage impératif *)
 
 (** Note : cet embryon de projet est pour l'instant en un seul fichier
@@ -49,11 +47,8 @@ and block = (position * instr) list
 type program = block
 
 type file_line = { number : position ; content : string}
-(***********************************************************************)
-(*A mettre dans utils.ml*)
 
-(*Permet de savoir le si le mot est un opérateur*)
-let is_operator word = 
+ let is_operator word = 
   match word with
     | "+" -> true
     | "-"  -> true
@@ -61,8 +56,9 @@ let is_operator word =
     | "/" -> true
     | "%" -> true
     | _ -> false  
-
-(*Permet de savoir le si le mot est un nombre*)
+  ;;
+  
+  (*Permet de savoir le si le mot est un nombre*)
 let is_number word =  
   match word with
     | "0" -> true
@@ -75,42 +71,19 @@ let is_number word =
     | "7" -> true
     | "8" -> true
     | "9" -> true
-    | _ -> false     
-
-(*Transforme le mot en operateur*)
-let get_operator word = 
+    | _ -> false  
+    ;;
+  
+  let get_operator word = 
   match word with
     | "+" -> Add
     | "-"  -> Sub
     | "*" -> Mul
     | "/" -> Div
-    | _ -> Mod  
-
-(*Calcul le nombre d'espace avant le début de la ligne*)    
-let rec get_space_num line iteration number_of_space =
-  if iteration < String.length line then
-     if String.get line iteration == ' ' then
-       get_space_num line (iteration + 1) (number_of_space + 1)
-     else
-       get_space_num line (iteration + 1) number_of_space
-  else
-     number_of_space    
-
-(*Retourne une liste sans les premiers elements (de i à j non compris)*)
-let rec list_without_first_elements list current_iteration min_iteration  = 
-match list with
-| [] -> []
-| element::sublist ->
-  if current_iteration < min_iteration then
-    list_without_first_elements sublist (current_iteration+1) min_iteration
-  else
-    let resultList = list_without_first_elements sublist (current_iteration+1) min_iteration in
-    element :: resultList
+    | _ -> Mod   
+    ;;
     
-
-(***********************************************************************)    
-
-(*Construit une instruction avec une liste de mot sans le mot clé*)
+    (*Construit une instruction avec une liste de mot sans le mot clé*)
 let rec construct_expression list_of_words = 
   let first_word = List.nth list_of_words 0 in
   if is_operator first_word then
@@ -125,7 +98,19 @@ let rec construct_expression list_of_words =
 
   else  
     Var (first_word)
-       
+    ;;
+    
+     let rec list_without_first_elements list current_iteration min_iteration  = 
+  match list with
+  | [] -> []
+  | element::sublist ->
+    if current_iteration < min_iteration then
+      list_without_first_elements sublist (current_iteration+1) min_iteration
+    else
+      let resultList = list_without_first_elements sublist (current_iteration+1) min_iteration in
+      element :: resultList
+      ;;
+
 (*Prend une liste de mot et renvoie une instruction*)
 let make_instruction list_of_words first_word = 
   match first_word with
@@ -138,6 +123,21 @@ let make_instruction list_of_words first_word =
     let sub_list_of_words = list_without_first_elements list_of_words 0 1 in
     Set (first_word, (construct_expression sub_list_of_words))
 
+        ;;   
+
+let rec list_without_first list iteration = 
+  match list with
+  | [] -> []
+  | element::sublist ->
+    if iteration == 0 then
+      list_without_first sublist 1
+    else
+      let resultList = list_without_first sublist (iteration+1) in
+      element :: resultList
+      ;;
+      
+
+      
 (*Explore la liste des lignes et renvoie une liste de block*)
 let rec convert_string_to_block list_of_lines = 
   match list_of_lines with 
@@ -153,47 +153,17 @@ let rec convert_string_to_block list_of_lines =
       else
         let sub_list_of_words = list_without_first_elements list_of_words 0 1 in
         (element.number, make_instruction sub_list_of_words first_word)::list_result
+      ;;
+      
 
-(*Lis le fichier et récupère toute les lignes renvoie un type file_line*)
-let rec get_lines_from_files file iteration get_lines =
-  try 
-    let current_line = input_line file in
-    print_endline current_line; (*vérifons qu'il existe des espaces*)
-    get_lines_from_files file (iteration + 1) ({number = iteration; content = current_line}::get_lines)
-  with End_of_file -> get_lines   
+      
+list_without_first [1;2;3] 0;;
+list_without_first_elements [1;2;3] 0 1;;
+convert_string_to_block [{ number = 1; content = "COMMENT valeur absolue"}; { number = 2; content = "res := - 0 n"}; { number = 3; content = "PRINT n"}];;
+convert_string_to_block [];;
+convert_string_to_block [];;
 
-(**)
-let read_polish (filename:string) : program = 
-  try
-    let file = open_in filename in
-    let list_of_lines = List.rev(get_lines_from_files file 0 []) in (*renvoie ce qu'il faut*)
-    convert_string_to_block list_of_lines
-  with Sys_error _ -> 
-    let () = print_endline ("Cannot read filename : " ^ filename) in
-    [] 
+is_operator "-";;
+get_operator "%";;
 
-let print_polish (p:program) : unit = failwith "TODO"
-
-let eval_polish (p:program) : unit = failwith "TODO"
-
-let makeListOfLine (filename:string) : unit =
-  try
-    let file = open_in filename in 
-    let list_of_content_in_file = List.rev(get_lines_from_files file 0 [])
-    (*in print_string (List.nth list_of_content_in_file 0)*)
-    in print_string (List.nth list_of_content_in_file 0).content
-  with Sys_error _ -> print_endline ("Cannot read filename : " ^ filename)
-
-let usage () =
-  print_string "Polish : analyse statique d'un mini-langage\n";
-  print_string "usage: à documenter (TODO)\n"
-
-let main () =
-  match Sys.argv with
-  | [|_;"--reprint";file|] -> print_polish (read_polish (String.trim file))
-  | [|_;"--eval";file|] -> eval_polish (read_polish (String.trim file))
-  | [|_;"--test";file|] -> makeListOfLine (String.trim file)
-  | _ -> usage ()
-
-(* lancement de ce main *)
-let () = main ()
+int_of_string "1";;
