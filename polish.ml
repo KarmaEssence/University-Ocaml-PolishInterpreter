@@ -75,7 +75,17 @@ let is_number word =
     | "7" -> true
     | "8" -> true
     | "9" -> true
-    | _ -> false     
+    | _ -> false  
+
+(*Permet de savoir le si le mot est un operateur de comparaison*)   
+let is_comp word = 
+  match word with
+    | "<=" -> true
+    | "<"  -> true
+    | ">=" -> true
+    | ">"  -> true
+    | "="  -> true
+    | "<>"  -> true    
 
 (*Transforme le mot en operateur*)
 let get_operator word = 
@@ -85,6 +95,17 @@ let get_operator word =
     | "*" -> Mul
     | "/" -> Div
     | _ -> Mod  
+
+(*Transforme le mot en operateur de comparaison*)
+let rec get_condition word =
+  match word with
+    | "<=" -> Le
+    | "<"  -> Lt
+    | ">=" -> Ge
+    | ">"  -> Gt
+    | "="  -> Eq
+    | "<>"  -> Ne
+   
 
 (*Calcul le nombre d'espace avant le début de la ligne*)    
 let rec get_space_num line iteration number_of_space =
@@ -108,6 +129,7 @@ match list with
     element :: resultList
 
 
+(*Retourne l'indentation de la ligne*)
 let rec get_indentation_from_line line count =
   let line_size = String.length line in
   if line_size == 0 then
@@ -117,6 +139,15 @@ let rec get_indentation_from_line line count =
         get_indentation_from_line (String.sub line 1 (line_size-1)) (count + 1)
       else
         count  
+
+(*transforme le string en tableau de string1*)
+let rec word_to_char_list word index list =
+  if String.length word == List.length list then
+    list
+  else
+    let make_string_from_char = String.make 1 (String.get word index) in
+    word_to_char_list word (index + 1) 
+    ((make_string_from_char)::list) ;;     
     
 
 (***********************************************************************)    
