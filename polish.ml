@@ -48,7 +48,7 @@ and block = (position * instr) list
 (** Un programme Polish est un bloc d'instructions *)
 type program = block
 
-type file_line = { number : position ; content : string}
+type file_line = { number : position ; indentation : int; content : string}
 (***********************************************************************)
 (*A mettre dans utils.ml*)
 
@@ -106,6 +106,17 @@ match list with
   else
     let resultList = list_without_first_elements sublist (current_iteration+1) min_iteration in
     element :: resultList
+
+
+let rec get_indentation_from_line line count =
+  let line_size = String.length line in
+  if line_size == 0 then
+    count
+    else
+      if String.get line 0 == ' ' then
+        get_indentation_from_line (String.sub line 1 (line_size-1)) (count + 1)
+      else
+        count  
     
 
 (***********************************************************************)    
@@ -158,8 +169,10 @@ let rec convert_string_to_block list_of_lines =
 let rec get_lines_from_files file iteration get_lines =
   try 
     let current_line = input_line file in
-    print_endline current_line; (*vérifons qu'il existe des espaces*)
-    get_lines_from_files file (iteration + 1) ({number = iteration; content = current_line}::get_lines)
+    let current_indentation = get_indentation_from_line current_line 0 in
+    (*print_endline current_line;*) (*vérifons qu'il existe des espaces*)
+    (*Format.printf "%d\n" current_indentation;*) (*comptons le nombre d'espaces*)
+    get_lines_from_files file (iteration + 1) ({number = iteration; indentation = indentation; content = current_line}::get_lines)
   with End_of_file -> get_lines   
 
 (**)
