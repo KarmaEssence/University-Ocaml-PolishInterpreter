@@ -176,6 +176,7 @@ let make_condition list_of_words =
   let exp_2 = construct_expression word_to_list_2 in 
   (exp_1, get_condition (List.nth list_of_words 1), exp_2)    
        
+(*Explore la liste des lignes et renvoie une liste de block*)
 let rec convert_string_to_block list_of_lines indentation = 
   match list_of_lines with 
   | [] -> []
@@ -186,31 +187,46 @@ let rec convert_string_to_block list_of_lines indentation =
         let list_result = convert_string_to_block sub_list_of_lines indentation in
         let list_of_words = String.split_on_char ' ' element.content in
         let first_word = List.nth list_of_words 0 in
-  
-        if first_word == "ELSE" || first_word = "COMMENT" then
+
+        if first_word = "ELSE" || first_word = "COMMENT" then
           list_result
-  
+
         else
-          
-          (*Prend une liste de mot et renvoie une instruction*)
+        
+          let rec obtain_else_block list_of_lines = 
+           match list_of_lines with 
+            | [] -> [{ number = 1; indentation = 0 ;content = "IF n < 2"}]
+            | element::sub_list_of_lines ->
+              let list_of_words = String.split_on_char ' ' element.content in
+              let first_word = List.nth list_of_words 0 in
+              if first_word = "ELSE" then
+                sub_list_of_lines
+              else
+                obtain_else_block sub_list_of_lines
+          in
+                    (*Prend une liste de mot et renvoie une instruction*)
           let make_instruction list_of_lines indentation list_of_words first_word = 
             match first_word with
             | "COMMENT" -> Read "t" 
             | "READ" -> Read first_word
             | "PRINT" -> Print (construct_expression list_of_words)
-            | "IF" -> Read "t"
+            | "IF" -> 
+              let condition = make_condition list_of_words in
+              let if_block = convert_string_to_block list_of_lines indentation in
+              let else_lines = obtain_else_block list_of_lines in
+              let else_block = convert_string_to_block else_lines indentation in 
+              If (condition, if_block, else_block)
             | "WHILE" -> 
               let condition = make_condition list_of_words in
-              let sub_block = convert_string_to_block sub_list_of_lines indentation in
+              let sub_block = convert_string_to_block list_of_lines indentation in
               While (condition, sub_block)
             | _ -> 
               let sub_list_of_words = list_without_first_elements list_of_words 0 1 in
               Set (first_word, (construct_expression sub_list_of_words)) in
-          
+        
           let sub_list_of_words = list_without_first_elements list_of_words 0 1 in
           (element.number, make_instruction sub_list_of_lines (indentation + 2) 
           sub_list_of_words first_word)::list_result
-          ;;
 
 (*Lis le fichier et récupère toute les lignes renvoie un type file_line*)
 let rec get_lines_from_files file iteration get_lines =
