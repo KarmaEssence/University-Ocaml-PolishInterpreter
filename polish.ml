@@ -248,7 +248,7 @@ let read_polish (filename:string) : program =
     let () = print_endline ("Cannot read filename : " ^ filename) in
     [] 
 
-let print_polish (p:program) : unit = failwith "TODO"
+
 
 let eval_polish (p:program) : unit = failwith "TODO"
 
@@ -259,6 +259,13 @@ let makeListOfLine (filename:string) : unit =
     (*in print_string (List.nth list_of_content_in_file 0)*)
     in print_string (List.nth list_of_content_in_file 0).content
   with Sys_error _ -> print_endline ("Cannot read filename : " ^ filename)
+
+(***********************************************************************)   
+
+let print_polish (p:program) : unit = failwith "TODO"
+
+
+(***********************************************************************)  
 
 let usage () =
   print_string "Polish : analyse statique d'un mini-langage\n";

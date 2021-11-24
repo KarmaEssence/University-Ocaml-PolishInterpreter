@@ -46,8 +46,17 @@ and block = (position * instr) list
 (** Un programme Polish est un bloc d'instructions *)
 type program = block
 
-type file_line = { number : position ; content : string}
-
+type file_line = { number : position ; indentation : int; content : string}
+ 
+ let is_comp word = 
+ match word with
+   | "<=" -> true
+   | "<"  -> true
+   | ">=" -> true
+   | ">"  -> true
+   | "="  -> true
+   | _  -> true
+ 
  let is_operator word = 
   match word with
     | "+" -> true
@@ -83,6 +92,30 @@ let is_number word =
     | _ -> Mod   
     ;;
     
+    let rec get_condition word =
+      match word with
+       | "<=" -> Le
+       | "<"  -> Lt
+       | ">=" -> Ge
+       | ">"  -> Gt
+       | "="  -> Eq
+       | _  -> Ne
+    ;;
+    
+    let rec get_indentation_from_line line count =
+      let line_size = String.length line in
+      if line_size = 0 then
+          count
+      else
+          if String.get line 0 = ' ' then
+            get_indentation_from_line (String.sub line 1 (line_size-1)) (count + 1)
+          else
+            count
+;;     
+
+let indentation_from_line = get_indentation_from_line "  Leo" 0;;
+    
+    
     (*Construit une instruction avec une liste de mot sans le mot clé*)
 let rec construct_expression list_of_words = 
   let first_word = List.nth list_of_words 0 in
@@ -110,58 +143,127 @@ let rec construct_expression list_of_words =
       let resultList = list_without_first_elements sublist (current_iteration+1) min_iteration in
       element :: resultList
       ;;
+      
 
-(*Prend une liste de mot et renvoie une instruction*)
-let make_instruction list_of_words first_word = 
-  match first_word with
-  | "COMMENT" -> Read "t" 
-  | "READ" -> Read first_word
-  | "PRINT" -> Print (construct_expression list_of_words)
-  | "IF" -> Read "t"
-  | "WHILE" -> Read "t"
-  | _ -> 
-    let sub_list_of_words = list_without_first_elements list_of_words 0 1 in
-    Set (first_word, (construct_expression sub_list_of_words))
+let rec word_to_char_list word index list =
+  if String.length word = List.length list then
+    list
+  else
+    let make_string_from_char = String.make 1 (String.get word index) in
+    word_to_char_list word (index + 1) 
+    ((make_string_from_char)::list) ;;
 
-        ;;   
+word_to_char_list "1+1" 0 [];;
+String.make 1 'c';;
+String.split_on_char ' ' "1+1";; 
+      
+let make_condition list_of_words =
+    let word_to_list_1 = word_to_char_list (List.nth list_of_words 0) 0 [] in
+    let word_to_list_2 = word_to_char_list (List.nth list_of_words 2) 0 [] in
+    let exp_1 = construct_expression word_to_list_1 in 
+    let exp_2 = construct_expression word_to_list_2 in 
+    (exp_1, get_condition (List.nth list_of_words 1), exp_2);;
+make_condition  ["1+1"; "<="; "2"]    
 
 let rec list_without_first list iteration = 
   match list with
   | [] -> []
   | element::sublist ->
-    if iteration == 0 then
+    if iteration = 0 then
       list_without_first sublist 1
     else
       let resultList = list_without_first sublist (iteration+1) in
       element :: resultList
       ;;
       
+list_without_first_elements [1;2;3] 0 1;;
+
 
       
+      
 (*Explore la liste des lignes et renvoie une liste de block*)
-let rec convert_string_to_block list_of_lines = 
+let rec convert_string_to_block list_of_lines indentation = 
   match list_of_lines with 
   | [] -> []
   | element::sub_list_of_lines -> 
-      let list_result = convert_string_to_block sub_list_of_lines in
-      let list_of_words = String.split_on_char ' ' element.content in
-      let first_word = List.nth list_of_words 0 in
+      if element.indentation <> indentation then
+        convert_string_to_block sub_list_of_lines indentation
+      else  
+        let list_result = convert_string_to_block sub_list_of_lines indentation in
+        let list_of_words = String.split_on_char ' ' element.content in
+        let first_word = List.nth list_of_words 0 in
 
-      if first_word = "COMMENT" then
-        list_result
+        if first_word = "ELSE" || first_word = "COMMENT" then
+          list_result
 
-      else
-        let sub_list_of_words = list_without_first_elements list_of_words 0 1 in
-        (element.number, make_instruction sub_list_of_words first_word)::list_result
-      ;;
+        else
+        
+          let rec obtain_else_block list_of_lines = 
+           match list_of_lines with 
+            | [] -> [{ number = 1; indentation = 0 ;content = "IF n < 2"}]
+            | element::sub_list_of_lines ->
+              let list_of_words = String.split_on_char ' ' element.content in
+              let first_word = List.nth list_of_words 0 in
+              if first_word = "ELSE" then
+                sub_list_of_lines
+              else
+                obtain_else_block sub_list_of_lines
+          in
+                    (*Prend une liste de mot et renvoie une instruction*)
+          let make_instruction list_of_lines indentation list_of_words first_word = 
+            match first_word with
+            | "COMMENT" -> Read "t" 
+            | "READ" -> Read first_word
+            | "PRINT" -> Print (construct_expression list_of_words)
+            | "IF" -> 
+              let condition = make_condition list_of_words in
+              let if_block = convert_string_to_block list_of_lines indentation in
+              let else_lines = obtain_else_block list_of_lines in
+              let else_block = convert_string_to_block else_lines indentation in 
+              If (condition, if_block, else_block)
+            | "WHILE" -> 
+              let condition = make_condition list_of_words in
+              let sub_block = convert_string_to_block list_of_lines indentation in
+              While (condition, sub_block)
+            | _ -> 
+              let sub_list_of_words = list_without_first_elements list_of_words 0 1 in
+              Set (first_word, (construct_expression sub_list_of_words)) in
+        
+          let sub_list_of_words = list_without_first_elements list_of_words 0 1 in
+          (element.number, make_instruction sub_list_of_lines (indentation + 2) 
+          sub_list_of_words first_word)::list_result
+        ;;
+        
+
+
+let list_of_words = String.split_on_char ' ' "ELSE" in
+List.nth list_of_words 0;;
+
+convert_string_to_block [{ number = 1; indentation = 0 ;content = "IF n < 2"}; 
+{ number = 2; indentation = 2 ;content = "PRINT n"}; 
+{ number = 3; indentation = 0 ;content = "ELSE"};
+{ number = 4; indentation = 2 ;content = "PRINT n"}] 0;;
       
-
-      
+let list_of_words = String.split_on_char ' ' "COMMENT valeur absolue";;    
 list_without_first [1;2;3] 0;;
 list_without_first_elements [1;2;3] 0 1;;
-convert_string_to_block [{ number = 1; content = "COMMENT valeur absolue"}; { number = 2; content = "res := - 0 n"}; { number = 3; content = "PRINT n"}];;
-convert_string_to_block [];;
-convert_string_to_block [];;
+convert_string_to_block [{ number = 1; indentation = 0;content = "COMMENT valeur absolue"}; { number = 2; indentation = 0; content = "res := - 0 n"}; { number = 3; indentation = 0 ;content = "PRINT n"}] 0;;
+
+convert_string_to_block [{ number = 1; indentation = 0; content = "res := - 0 n"}; { number = 2; indentation = 0;content = "COMMENT valeur absolue"};] 0;;
+
+convert_string_to_block [{ number = 1; indentation = 1; content = "res := - 0 n"}; { number = 2; indentation = 0;content = "COMMENT valeur absolue"};
+{ number = 4; indentation = 1 ;content = "PRINT n"}] 0;;
+
+convert_string_to_block [{ number = 1; indentation = 0 ;content = "WHILE n < 2"}; 
+{ number = 2; indentation = 2 ;content = "PRINT n"}] 0;;
+
+convert_string_to_block [{ number = 1; indentation = 0 ;content = "IF n < 2"}; 
+{ number = 2; indentation = 2 ;content = "PRINT n"}; 
+(*{ number = 3; indentation = 0 ;content = "ELSE"};*)
+{ number = 4; indentation = 0 ;content = "PRINT n"}] 0;;
+
+convert_string_to_block [] 0;;
+convert_string_to_block [] 0;;
 
 is_operator "-";;
 get_operator "%";;
