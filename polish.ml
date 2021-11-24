@@ -111,7 +111,7 @@ let get_condition word =
 (*Calcul le nombre d'espace avant le début de la ligne*)    
 let rec get_space_num line iteration number_of_space =
   if iteration < String.length line then
-     if String.get line iteration == ' ' then
+     if String.get line iteration = ' ' then
        get_space_num line (iteration + 1) (number_of_space + 1)
      else
        get_space_num line (iteration + 1) number_of_space
@@ -133,17 +133,17 @@ match list with
 (*Retourne l'indentation de la ligne*)
 let rec get_indentation_from_line line count =
   let line_size = String.length line in
-  if line_size == 0 then
+  if line_size = 0 then
     count
     else
-      if String.get line 0 == ' ' then
+      if String.get line 0 = ' ' then
         get_indentation_from_line (String.sub line 1 (line_size-1)) (count + 1)
       else
         count  
 
 (*transforme le string en tableau de string1*)
 let rec word_to_char_list word index list =
-  if String.length word == List.length list then
+  if String.length word = List.length list then
     list
   else
     let make_string_from_char = String.make 1 (String.get word index) in
