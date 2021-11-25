@@ -257,7 +257,7 @@ let rec convert_string_to_block list_of_lines indentation =
        | Mod -> "%"
        ;;
        
-    let rec make_string_comparation comp = 
+    let make_string_comparation comp = 
       match comp with
         | Eq -> " = "
         | Ne -> " <> "
@@ -270,7 +270,7 @@ let rec convert_string_to_block list_of_lines indentation =
    
    let rec make_string_expression expr = 
      match expr with
-       | Num (int) -> Pervasives.string_of_int 1
+       | Num (int) -> string_of_int 1
        | Var (name) -> name
        | Op (op, expr1, expr2) ->
          let string_1 = make_string_expression expr1 in
@@ -291,11 +291,11 @@ make_string_expression (Op (Add, Num 1, Num 2));;
      
      ;;
 
-   let rec convert_block_to_string list_of_block indentation =
+   (*let rec convert_block_to_string list_of_block indentation =
      match list_of_block with
        | [] -> []
        | (position, instruction)::sub_list_of_block ->
-
+      
           let rec make_string_instruction position instruction = 
             match instruction with
               | Set (name, expr) ->
@@ -309,16 +309,60 @@ make_string_expression (Op (Add, Num 1, Num 2));;
                 
               | While (cond, block) ->
                 "WHILE " ^ make_string_condition cond
+
           in    
           let list_file_lines = convert_block_to_string sub_list_of_block indentation in
           let contents = make_string_instruction position instruction in 
           let file_line = { number = position; indentation = indentation; content = contents} in
           file_line :: list_file_lines
           
+        ;;*)
+        
+   let rec convert_block_to_string list_of_block indentation =
+     match list_of_block with
+       | [] -> []
+       | (position, instruction)::sub_list_of_block ->
+      
+          let make_string_instruction position instruction list_file_lines indentation = 
+            match instruction with
+              | Set (name, expr) ->
+                let contents = name ^ " := " ^ make_string_expression expr in
+                let line = { number = position; indentation = indentation; content = contents} in
+                [line] @ list_file_lines
+              | Read (name) ->
+                let contents = "READ " ^ name in
+                let line = { number = position; indentation = indentation; content = contents} in
+                [line] @ list_file_lines
+              | Print (expr) -> 
+                let contents = "PRINT " ^ make_string_expression expr in
+                let line = { number = position; indentation = indentation; content = contents} in
+                [line] @ list_file_lines
+              | If (cond, block_if, block_else) ->
+                let contents = "READ " in
+                let line = { number = position; indentation = indentation; content = contents} in
+                [line] @ list_file_lines
+              | While (cond, block) ->
+                let contents = "WHILE " ^ make_string_condition cond in
+                let line = { number = position; indentation = indentation; content = contents} in
+                let lines = [line] @ list_file_lines in 
+                let block_lines = convert_block_to_string block (indentation + 2) in
+                lines @ block_lines
+
+          in 
+          let list_file_lines_all = convert_block_to_string sub_list_of_block indentation in
+          let list_file_lines = make_string_instruction position instruction [] indentation in
+          
+          list_file_lines @ list_file_lines_all
+          
         ;;
         
 convert_block_to_string [(1, Set ("res", Op (Sub, Num 0, Var "n")))] 0;;    
 convert_block_to_string [(1, Print (Var "n"))] 0;;
+
+convert_block_to_string [(1, While ((Var "n", Lt, Num 2), [(2, Print (Var "n"))]));
+(3, Read "n")] 0;;
+
+convert_block_to_string [(1, Set ("res", Op (Sub, Num 0, Var "n"))); (2, While ((Var "n", Lt, Num 2), [(3, Print (Var "n"))])); (4, Read "n")] 0;;
 
 (***********************************************************************) 
 

@@ -216,7 +216,8 @@ let rec convert_string_to_block list_of_lines indentation =
               else
                 obtain_else_block sub_list_of_lines
           in
-                    (*Prend une liste de mot et renvoie une instruction*)
+          
+          (*Prend une liste de mot et renvoie une instruction*)
           let make_instruction list_of_lines indentation list_of_words first_word = 
             match first_word with 
             | "READ" -> Read (List.nth list_of_words 0)
@@ -272,7 +273,83 @@ let makeListOfLine (filename:string) : unit =
     in print_string (List.nth list_of_content_in_file 0).content
   with Sys_error _ -> print_endline ("Cannot read filename : " ^ filename)
 
-(***********************************************************************)   
+(***********************************************************************)
+
+let make_string_operator op = 
+  match op with
+    | Add -> "+"
+    | Sub -> "-"
+    | Mul -> "*"
+    | Div -> "/"
+    | Mod -> "%"
+    ;;
+    
+ let make_string_comparation comp = 
+   match comp with
+     | Eq -> " = "
+     | Ne -> " <> "
+     | Lt -> " < "
+     | Le -> " <= "
+     | Gt -> " > "
+     | Ge -> " >= "
+
+
+
+let rec make_string_expression expr = 
+  match expr with
+    | Num (int) -> string_of_int 1
+    | Var (name) -> name
+    | Op (op, expr1, expr2) ->
+      let string_1 = make_string_expression expr1 in
+      let string_2 = make_string_expression expr2 in
+      let string_op = make_string_operator op in
+      string_op ^ " " ^ string_1 ^ " " ^ string_2
+    ;;
+   
+make_string_expression (Op (Add, Num 1, Num 2));;
+
+let make_string_condition cond = 
+  match cond with
+  | (expr1, comp, expr2) -> 
+     let string_expr1 = make_string_expression expr1 in
+     let string_expr2 = make_string_expression expr2 in
+     let string_comp = make_string_comparation comp in 
+     string_expr1 ^ string_comp ^ string_expr2
+
+let rec convert_block_to_string list_of_block indentation =
+  match list_of_block with
+    | [] -> []
+    | (position, instruction)::sub_list_of_block ->
+       
+      let make_string_instruction position instruction list_file_lines indentation = 
+        match instruction with
+          | Set (name, expr) ->
+            let contents = name ^ " := " ^ make_string_expression expr in
+            let line = { number = position; indentation = indentation; content = contents} in
+            [line] @ list_file_lines
+          | Read (name) ->
+            let contents = "READ " ^ name in
+            let line = { number = position; indentation = indentation; content = contents} in
+            [line] @ list_file_lines
+          | Print (expr) -> 
+            let contents = "PRINT " ^ make_string_expression expr in
+            let line = { number = position; indentation = indentation; content = contents} in
+            [line] @ list_file_lines
+          | If (cond, block_if, block_else) ->
+            let contents = "READ " in
+            let line = { number = position; indentation = indentation; content = contents} in
+            [line] @ list_file_lines
+          | While (cond, block) ->
+            let contents = "WHILE " ^ make_string_condition cond in
+            let line = { number = position; indentation = indentation; content = contents} in
+            let lines = [line] @ list_file_lines in 
+            let block_lines = convert_block_to_string block (indentation + 2) in
+            lines @ block_lines
+ 
+      in 
+      let list_file_lines_all = convert_block_to_string sub_list_of_block indentation in
+      let list_file_lines = make_string_instruction position instruction [] indentation in
+      list_file_lines @ list_file_lines_all     
 
 let print_polish (p:program) : unit = failwith "TODO"
 
