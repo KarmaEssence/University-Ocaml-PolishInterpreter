@@ -193,9 +193,21 @@ let rec convert_string_to_block list_of_lines indentation =
 
         else
         
+          let rec obtain_if_block list_of_lines list_result = 
+           match list_of_lines with 
+            | [] -> []
+            | element::sub_list_of_lines ->
+              let list_of_words = String.split_on_char ' ' element.content in
+              let first_word = List.nth list_of_words 0 in
+              if first_word = "ELSE" then
+                list_result
+              else
+                obtain_if_block sub_list_of_lines ([element] @ list_result)
+          in
+        
           let rec obtain_else_block list_of_lines = 
            match list_of_lines with 
-            | [] -> [{ number = 1; indentation = 0 ;content = "IF n < 2"}]
+            | [] -> []
             | element::sub_list_of_lines ->
               let list_of_words = String.split_on_char ' ' element.content in
               let first_word = List.nth list_of_words 0 in
@@ -206,13 +218,13 @@ let rec convert_string_to_block list_of_lines indentation =
           in
                     (*Prend une liste de mot et renvoie une instruction*)
           let make_instruction list_of_lines indentation list_of_words first_word = 
-            match first_word with
-            | "COMMENT" -> Read "t" 
-            | "READ" -> Read first_word
+            match first_word with 
+            | "READ" -> Read (List.nth list_of_words 0)
             | "PRINT" -> Print (construct_expression list_of_words)
             | "IF" -> 
               let condition = make_condition list_of_words in
-              let if_block = convert_string_to_block list_of_lines indentation in
+              let if_lines = obtain_if_block list_of_lines [] in
+              let if_block = convert_string_to_block if_lines indentation in
               let else_lines = obtain_else_block list_of_lines in
               let else_block = convert_string_to_block else_lines indentation in 
               If (condition, if_block, else_block)

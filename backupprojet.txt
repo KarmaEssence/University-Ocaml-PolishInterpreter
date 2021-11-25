@@ -198,9 +198,21 @@ let rec convert_string_to_block list_of_lines indentation =
 
         else
         
+          let rec obtain_if_block list_of_lines list_result = 
+           match list_of_lines with 
+            | [] -> []
+            | element::sub_list_of_lines ->
+              let list_of_words = String.split_on_char ' ' element.content in
+              let first_word = List.nth list_of_words 0 in
+              if first_word = "ELSE" then
+                list_result
+              else
+                obtain_if_block sub_list_of_lines ([element] @ list_result)
+          in
+        
           let rec obtain_else_block list_of_lines = 
            match list_of_lines with 
-            | [] -> [{ number = 1; indentation = 0 ;content = "IF n < 2"}]
+            | [] -> []
             | element::sub_list_of_lines ->
               let list_of_words = String.split_on_char ' ' element.content in
               let first_word = List.nth list_of_words 0 in
@@ -211,13 +223,13 @@ let rec convert_string_to_block list_of_lines indentation =
           in
                     (*Prend une liste de mot et renvoie une instruction*)
           let make_instruction list_of_lines indentation list_of_words first_word = 
-            match first_word with
-            | "COMMENT" -> Read "t" 
-            | "READ" -> Read first_word
+            match first_word with 
+            | "READ" -> Read (List.nth list_of_words 0)
             | "PRINT" -> Print (construct_expression list_of_words)
             | "IF" -> 
               let condition = make_condition list_of_words in
-              let if_block = convert_string_to_block list_of_lines indentation in
+              let if_lines = obtain_if_block list_of_lines [] in
+              let if_block = convert_string_to_block if_lines indentation in
               let else_lines = obtain_else_block list_of_lines in
               let else_block = convert_string_to_block else_lines indentation in 
               If (condition, if_block, else_block)
@@ -245,6 +257,17 @@ let rec convert_string_to_block list_of_lines indentation =
        | Mod -> "%"
        ;;
        
+    let rec make_string_comparation comp = 
+      match comp with
+        | Eq -> " = "
+        | Ne -> " <> "
+        | Lt -> " < "
+        | Le -> " <= "
+        | Gt -> " > "
+        | Ge -> " >= "
+   
+   
+   
    let rec make_string_expression expr = 
      match expr with
        | Num (int) -> Pervasives.string_of_int 1
@@ -258,6 +281,16 @@ let rec convert_string_to_block list_of_lines indentation =
       
 make_string_expression (Op (Add, Num 1, Num 2));;
 
+   let make_string_condition cond = 
+     match cond with
+     | (expr1, comp, expr2) -> 
+        let string_expr1 = make_string_expression expr1 in
+        let string_expr2 = make_string_expression expr2 in
+        let string_comp = make_string_comparation comp in 
+        string_expr1 ^ string_comp ^ string_expr2
+     
+     ;;
+
    let rec convert_block_to_string list_of_block indentation =
      match list_of_block with
        | [] -> []
@@ -268,13 +301,14 @@ make_string_expression (Op (Add, Num 1, Num 2));;
               | Set (name, expr) ->
                 name ^ " := " ^ make_string_expression expr
               | Read (name) ->
-                "READ" ^ name
+                "READ " ^ name
               | Print (expr) -> 
-                "PRINT" ^ make_string_expression expr
+                "PRINT " ^ make_string_expression expr
               | If (cond, block_if, block_else) ->
-                "READ"
+                "READ "
+                
               | While (cond, block) ->
-                "READ"
+                "WHILE " ^ make_string_condition cond
           in    
           let list_file_lines = convert_block_to_string sub_list_of_block indentation in
           let contents = make_string_instruction position instruction in 
@@ -284,6 +318,7 @@ make_string_expression (Op (Add, Num 1, Num 2));;
         ;;
         
 convert_block_to_string [(1, Set ("res", Op (Sub, Num 0, Var "n")))] 0;;    
+convert_block_to_string [(1, Print (Var "n"))] 0;;
 
 (***********************************************************************) 
 
@@ -296,12 +331,12 @@ List.nth list_of_words 0;;
 convert_string_to_block [{ number = 1; indentation = 0 ;content = "IF n < 2"}; 
 { number = 2; indentation = 2 ;content = "PRINT n"}; 
 { number = 3; indentation = 0 ;content = "ELSE"};
-{ number = 4; indentation = 2 ;content = "PRINT n"}] 0;;
+{ number = 4; indentation = 2 ;content = "READ n"}] 0;;
       
 let list_of_words = String.split_on_char ' ' "COMMENT valeur absolue";;    
 list_without_first [1;2;3] 0;;
 list_without_first_elements [1;2;3] 0 1;;
-convert_string_to_block [{ number = 1; indentation = 0;content = "COMMENT valeur absolue"}; { number = 2; indentation = 0; content = "res := - 0 n"}; { number = 3; indentation = 0 ;content = "PRINT n"}] 0;;
+convert_string_to_block [{ number = 1; indentation = 0;content = "COMMENT valeur absolue"}; { number = 2; indentation = 0; content = "res := - 0 n"}; { number = 3; indentation = 0 ;content = "READ n"}] 0;;
 
 convert_string_to_block [{ number = 1; indentation = 0; content = "res := - 0 n"}; { number = 2; indentation = 0;content = "COMMENT valeur absolue"};] 0;;
 
