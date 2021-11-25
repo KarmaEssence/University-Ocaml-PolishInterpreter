@@ -344,7 +344,8 @@ let rec convert_block_to_string list_of_block indentation =
             if List.length block_else > 0 then
               let block_lines_else = convert_block_to_string block_else (indentation + 2) in
               let line_with_if_block = [line] @ block_lines_if  in
-              let line_else = { number = position; indentation = indentation; content = "ELSE"} in
+              let else_pos = (List.length block_lines_if) + position + 1 in 
+              let line_else = { number = else_pos; indentation = indentation; content = "ELSE"} in
               let lines_with_else =  line_with_if_block @ [line_else] in
               let line_else_content = lines_with_else @ block_lines_else  in
               list_file_lines @ line_else_content
