@@ -336,9 +336,22 @@ let rec convert_block_to_string list_of_block indentation =
             let line = { number = position; indentation = indentation; content = contents} in
             [line] @ list_file_lines
           | If (cond, block_if, block_else) ->
-            let contents = "READ " in
+            let contents = "IF " ^ make_string_condition cond in
             let line = { number = position; indentation = indentation; content = contents} in
-            [line] @ list_file_lines
+            (*let lines = [line] @ list_file_lines in *)
+            let block_lines_if = convert_block_to_string block_if (indentation + 2) in
+                 
+            if List.length block_else > 0 then
+              let block_lines_else = convert_block_to_string block_else (indentation + 2) in
+              let line_with_if_block = [line] @ block_lines_if  in
+              let line_else = { number = position; indentation = indentation; content = "ELSE"} in
+              let lines_with_else =  line_with_if_block @ [line_else] in
+              let line_else_content = lines_with_else @ block_lines_else  in
+              list_file_lines @ line_else_content
+            
+            else
+              [line] @ block_lines_if
+                   
           | While (cond, block) ->
             let contents = "WHILE " ^ make_string_condition cond in
             let line = { number = position; indentation = indentation; content = contents} in
@@ -346,10 +359,11 @@ let rec convert_block_to_string list_of_block indentation =
             let block_lines = convert_block_to_string block (indentation + 2) in
             lines @ block_lines
  
-      in 
-      let list_file_lines_all = convert_block_to_string sub_list_of_block indentation in
-      let list_file_lines = make_string_instruction position instruction [] indentation in
-      list_file_lines @ list_file_lines_all     
+        in 
+        let list_file_lines_all = convert_block_to_string sub_list_of_block indentation in
+        let list_file_lines = make_string_instruction position instruction [] indentation in
+           
+        list_file_lines @ list_file_lines_all     
 
 let print_polish (p:program) : unit = failwith "TODO"
 
