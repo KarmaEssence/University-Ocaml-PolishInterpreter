@@ -233,8 +233,62 @@ let rec convert_string_to_block list_of_lines indentation =
           (element.number, make_instruction sub_list_of_lines (indentation + 2) 
           sub_list_of_words first_word)::list_result
         ;;
-        
 
+(***********************************************************************)
+
+   let make_string_operator op = 
+     match op with
+       | Add -> "+"
+       | Sub -> "-"
+       | Mul -> "*"
+       | Div -> "/"
+       | Mod -> "%"
+       ;;
+       
+   let rec make_string_expression expr = 
+     match expr with
+       | Num (int) -> Pervasives.string_of_int 1
+       | Var (name) -> name
+       | Op (op, expr1, expr2) ->
+         let string_1 = make_string_expression expr1 in
+         let string_2 = make_string_expression expr2 in
+         let string_op = make_string_operator op in
+         string_op ^ " " ^ string_1 ^ " " ^ string_2
+       ;;
+      
+make_string_expression (Op (Add, Num 1, Num 2));;
+
+   let rec convert_block_to_string list_of_block indentation =
+     match list_of_block with
+       | [] -> []
+       | (position, instruction)::sub_list_of_block ->
+
+          let rec make_string_instruction position instruction = 
+            match instruction with
+              | Set (name, expr) ->
+                name ^ " := " ^ make_string_expression expr
+              | Read (name) ->
+                "READ" ^ name
+              | Print (expr) -> 
+                "PRINT" ^ make_string_expression expr
+              | If (cond, block_if, block_else) ->
+                "READ"
+              | While (cond, block) ->
+                "READ"
+          in    
+          let list_file_lines = convert_block_to_string sub_list_of_block indentation in
+          let contents = make_string_instruction position instruction in 
+          let file_line = { number = position; indentation = indentation; content = contents} in
+          file_line :: list_file_lines
+          
+        ;;
+        
+convert_block_to_string [(1, Set ("res", Op (Sub, Num 0, Var "n")))] 0;;    
+
+(***********************************************************************) 
+
+Pervasives.string_of_int 1 ;;
+"1" ^ " " ^ " + " ^ " " ^ "1";;
 
 let list_of_words = String.split_on_char ' ' "ELSE" in
 List.nth list_of_words 0;;
@@ -251,8 +305,8 @@ convert_string_to_block [{ number = 1; indentation = 0;content = "COMMENT valeur
 
 convert_string_to_block [{ number = 1; indentation = 0; content = "res := - 0 n"}; { number = 2; indentation = 0;content = "COMMENT valeur absolue"};] 0;;
 
-convert_string_to_block [{ number = 1; indentation = 1; content = "res := - 0 n"}; { number = 2; indentation = 0;content = "COMMENT valeur absolue"};
-{ number = 4; indentation = 1 ;content = "PRINT n"}] 0;;
+convert_string_to_block [{ number = 1; indentation = 0; content = "res := - 0 n"}; { number = 2; indentation = 0;content = "COMMENT valeur absolue"};
+{ number = 4; indentation = 0 ;content = "PRINT n"}] 0;;
 
 convert_string_to_block [{ number = 1; indentation = 0 ;content = "WHILE n < 2"}; 
 { number = 2; indentation = 2 ;content = "PRINT n"}] 0;;
