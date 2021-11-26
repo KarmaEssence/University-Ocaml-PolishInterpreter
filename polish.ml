@@ -332,8 +332,19 @@ let rec convert_file_line_list_to_block list_of_file_line block indentation =
         convert_file_line_list_to_block sub_list_of_file_line res indentation
 
       | "IF" -> 
+
+        let condition = make_condition list_of_word in
         
-        let res = (file_line.position, Read "3") :: block in
+        print_string " before if_sub_list_of_file_line\n";
+        print_lines sub_list_of_file_line;
+        
+        let if_sub_list_of_file_line = obtain_sub_block_clean sub_list_of_file_line (file_line.indentation + 2) [] in
+
+        print_string " after if_sub_list_of_file_line\n";
+        print_lines if_sub_list_of_file_line;
+        
+        let if_sub_block = convert_file_line_list_to_block if_sub_list_of_file_line [] (indentation + 2) in
+        let res = (file_line.position, If (condition, if_sub_block, [])) :: block in
         convert_file_line_list_to_block sub_list_of_file_line res indentation
 
       | "WHILE" -> 
