@@ -260,16 +260,24 @@ let get_condition word =
   | ">=" -> Ge
   | ">"  -> Gt
   | "="  -> Eq
-  | _  -> Ne  
+  | _  -> Ne
 
-let rec construct_expression list_of_words = 
-  let first_word = List.hd list_of_words in
+let rec skip_element list_of_word number =
+  if number <= 0 then
+    list_of_word
+  else
+    let list = list_without_first_word_clean list_of_word 0 [] in
+    skip_element list (number-1) 
+
+
+let rec construct_expression list_of_word = 
+  let first_word = List.hd list_of_word in
   print_string ("construct_expression first word : " ^ first_word ^ "\n");
   if is_operator first_word then
-    let num_1 = List.nth list_of_words 1 in
-    let num_2 = List.nth list_of_words 2 in
-    let exp_1 = construct_expression [num_1] in
-    let exp_2 = construct_expression [num_2] in
+    let num = skip_element list_of_word 1 in
+    let sub_string = skip_element list_of_word 2 in
+    let exp_1 = construct_expression num in
+    let exp_2 = construct_expression sub_string in
     Op (get_operator first_word, exp_1, exp_2)
 
   else if is_number first_word then
@@ -277,12 +285,19 @@ let rec construct_expression list_of_words =
 
   else  
     Var (first_word)
+  
+let make_condition list_of_words =
+  let list_1 = make_list_string_list_without_space (List.hd list_of_words) in
+  let list_2 = make_list_string_list_without_space (List.nth list_of_words 2) in
+  let exp_1 = construct_expression list_1 in 
+  let exp_2 = construct_expression list_2 in 
+  (exp_1, get_condition (List.nth list_of_words 1), exp_2);;    
 
 let rec convert_file_line_list_to_block list_of_file_line block indentation = 
   match list_of_file_line with
   | [] -> block
   | file_line::sub_list_of_file_line ->
-    
+
     let first_word = first_word_of_file_line (file_line.content) in
     let list_of_word = make_list_string_list_without_space_and_first_word (file_line.content) in
     
@@ -299,13 +314,15 @@ let rec convert_file_line_list_to_block list_of_file_line block indentation =
         convert_file_line_list_to_block sub_list_of_file_line res indentation
 
     | "IF" -> 
-
+      
       let res = (file_line.position, Read "3") :: block in
       convert_file_line_list_to_block sub_list_of_file_line res indentation 
 
     | "WHILE" -> 
 
-      let res = (file_line.position, Read "4") :: block in
+      let condition = make_condition list_of_word in
+      (*let sub_block = convert_string_to_block list_of_lines indentation in*)
+      let res = (file_line.position, While (condition, [])) :: block in
       convert_file_line_list_to_block sub_list_of_file_line res indentation 
     
       | _ -> 
