@@ -55,21 +55,23 @@ type file_line = { position : position ; indentation : int; content : string}
 let make_list_string_list_without_space string = 
   String.split_on_char ' ' string
 
-let make_list_string_list_without_space_and_first_word string = 
-  let list_of_word = make_list_string_list_without_space string in
-  
-  let rec list_without_first_word list_of_word iteration res_list = 
-    match list_of_word with
-    | [] -> res_list
-    | word::sub_list_of_word ->
-      if iteration = 0 then
-        list_without_first_word sub_list_of_word (iteration + 1) res_list
-      else 
-        list_without_first_word sub_list_of_word (iteration + 1) (res_list) 
-  in 
-  let sub_list_of_word = list_without_first_word list_of_word 0 [] in 
-  List.rev sub_list_of_word    
+let rec list_without_first_word list_of_word iteration res_list = 
+  match list_of_word with
+  | [] -> res_list
+  | word::sub_list_of_word ->
+    if iteration = 0 then
+      list_without_first_word sub_list_of_word (iteration + 1) res_list
+    else 
+      list_without_first_word sub_list_of_word (iteration + 1) (word :: res_list)
 
+let list_without_first_word_clean list_of_word iteration res_list = 
+  let list = list_without_first_word list_of_word iteration res_list in
+  List.rev list 
+
+let make_list_string_list_without_space_and_first_word string = 
+  let list_of_word = make_list_string_list_without_space string in 
+  list_without_first_word_clean list_of_word 0 [] 
+    
 let first_word_of_file_line string = 
   List.hd (make_list_string_list_without_space string)
 
@@ -88,7 +90,7 @@ let rec get_indentation_from_line line count =
       if String.get line 0 = ' ' then
         get_indentation_from_line (String.sub line 1 (line_size-1)) (count + 1)
       else
-        count  
+        count     
 
 (***********************************************************************)
 (*                             print_polish                            *)
@@ -210,28 +212,113 @@ let print_polish (p:program) : unit =
 (*                             read_polish                             *)
 (***********************************************************************)
 
+let is_comp word = 
+  match word with
+  | "<=" -> true
+  | "<"  -> true
+  | ">=" -> true
+  | ">"  -> true
+  | "="  -> true
+  | _  -> true
+          
+let is_operator word = 
+  match word with
+  | "+" -> true
+  | "-"  -> true
+  | "*" -> true
+  | "/" -> true
+  | "%" -> true
+  | _ -> false  
+                      
+let is_number word =  
+  match word with
+  | "0" -> true
+  | "1"  -> true
+  | "2" -> true
+  | "3" -> true
+  | "4" -> true
+  | "5" -> true
+  | "6" -> true
+  | "7" -> true
+  | "8" -> true
+  | "9" -> true
+  | _ -> false  
+             
+           
+let get_operator word = 
+  match word with
+  | "+" -> Add
+  | "-"  -> Sub
+  | "*" -> Mul
+  | "/" -> Div
+  | _ -> Mod   
+             
+let get_condition word =
+  match word with
+  | "<=" -> Le
+  | "<"  -> Lt
+  | ">=" -> Ge
+  | ">"  -> Gt
+  | "="  -> Eq
+  | _  -> Ne  
+
+let rec construct_expression list_of_words = 
+  let first_word = List.hd list_of_words in
+  print_string ("construct_expression first word : " ^ first_word ^ "\n");
+  if is_operator first_word then
+    let num_1 = List.nth list_of_words 1 in
+    let num_2 = List.nth list_of_words 2 in
+    let exp_1 = construct_expression [num_1] in
+    let exp_2 = construct_expression [num_2] in
+    Op (get_operator first_word, exp_1, exp_2)
+
+  else if is_number first_word then
+    Num (int_of_string first_word)
+
+  else  
+    Var (first_word)
+
 let rec convert_file_line_list_to_block list_of_file_line block indentation = 
   match list_of_file_line with
   | [] -> block
   | file_line::sub_list_of_file_line ->
+    
     let first_word = first_word_of_file_line (file_line.content) in
     let list_of_word = make_list_string_list_without_space_and_first_word (file_line.content) in
+    
     match first_word with
+    
     | "READ" -> 
-      let res = (file_line.position, Read "1") :: block in
+
+      let res = (file_line.position, Read (List.hd list_of_word)) :: block in
       convert_file_line_list_to_block sub_list_of_file_line res indentation 
+
     | "PRINT" -> 
-      let res = (file_line.position, Read "2") :: block in
-      convert_file_line_list_to_block sub_list_of_file_line res indentation 
+
+      let res = (file_line.position, Print (construct_expression list_of_word)) :: block in
+        convert_file_line_list_to_block sub_list_of_file_line res indentation
+
     | "IF" -> 
+
       let res = (file_line.position, Read "3") :: block in
       convert_file_line_list_to_block sub_list_of_file_line res indentation 
+
     | "WHILE" -> 
+
       let res = (file_line.position, Read "4") :: block in
       convert_file_line_list_to_block sub_list_of_file_line res indentation 
-    | _ -> 
-      let res = (file_line.position, Read "5") :: block in
-      convert_file_line_list_to_block sub_list_of_file_line res indentation
+    
+      | _ -> 
+
+      if first_word <> "ELSE" then
+
+        let sub_list_of_word = list_without_first_word_clean list_of_word 0 [] in
+        let res = (file_line.position, Set (first_word, construct_expression sub_list_of_word)) :: block in
+        convert_file_line_list_to_block sub_list_of_file_line res indentation
+
+      else
+
+        convert_file_line_list_to_block sub_list_of_file_line block indentation  
 
 let clean_convert_file_line_list_to_block list_of_file_line block indentation = 
   let list =  convert_file_line_list_to_block list_of_file_line block indentation in
