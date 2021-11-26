@@ -53,9 +53,25 @@ type file_line = { position : position ; indentation : int; content : string}
 (***********************************************************************)
 
 let make_list_string_list_without_space string = 
-  let list_of_words = String.split_on_char ' ' string in
-  print_string ("Premier mot de la ligne : " ^ List.hd list_of_words ^ "\n");
-  List.hd list_of_words
+  String.split_on_char ' ' string
+
+let make_list_string_list_without_space_and_first_word string = 
+  let list_of_word = make_list_string_list_without_space string in
+  
+  let rec list_without_first_word list_of_word iteration res_list = 
+    match list_of_word with
+    | [] -> res_list
+    | word::sub_list_of_word ->
+      if iteration = 0 then
+        list_without_first_word sub_list_of_word (iteration + 1) res_list
+      else 
+        list_without_first_word sub_list_of_word (iteration + 1) (res_list) 
+  in 
+  let sub_list_of_word = list_without_first_word list_of_word 0 [] in 
+  List.rev sub_list_of_word    
+
+let first_word_of_file_line string = 
+  List.hd (make_list_string_list_without_space string)
 
 let construct_file_line position indentation content =  
   {position = position; indentation = indentation; content = content}
@@ -78,6 +94,98 @@ let rec get_indentation_from_line line count =
 (*                             print_polish                            *)
 (***********************************************************************)
 
+let make_string_operator op = 
+  match op with
+    | Add -> "+"
+    | Sub -> "-"
+    | Mul -> "*"
+    | Div -> "/"
+    | Mod -> "%"
+   
+    
+let make_string_comparation comp = 
+  match comp with
+    | Eq -> " = "
+    | Ne -> " <> "
+    | Lt -> " < "
+    | Le -> " <= "
+    | Gt -> " > "
+    | Ge -> " >= "
+
+
+
+let rec make_string_expression expr = 
+  match expr with
+    | Num (value) -> string_of_int value
+    | Var (name) -> name
+    | Op (op, expr1, expr2) ->
+      let string_1 = make_string_expression expr1 in
+      let string_2 = make_string_expression expr2 in
+      let string_op = make_string_operator op in
+      string_op ^ " " ^ string_1 ^ " " ^ string_2
+
+let make_string_condition cond = 
+  match cond with
+  | (expr1, comp, expr2) -> 
+     let string_expr1 = make_string_expression expr1 in
+     let string_expr2 = make_string_expression expr2 in
+     let string_comp = make_string_comparation comp in 
+     string_expr1 ^ string_comp ^ string_expr2
+
+let rec convert_block_to_string list_of_block indentation =
+  match list_of_block with
+    | [] -> []
+    | (position, instruction)::sub_list_of_block ->
+   
+       let make_string_instruction position instruction list_file_lines indentation = 
+         match instruction with
+           | Set (name, expr) ->
+             let contents = name ^ " := " ^ make_string_expression expr in
+             let line = { position = position; indentation = indentation; content = contents} in
+             [line] @ list_file_lines
+           | Read (name) ->
+             let contents = "READ " ^ name in
+             let line = { position = position; indentation = indentation; content = contents} in
+             [line] @ list_file_lines
+           | Print (expr) -> 
+             let contents = "PRINT " ^ make_string_expression expr in
+             let line = { position = position; indentation = indentation; content = contents} in
+             [line] @ list_file_lines
+           | If (cond, block_if, block_else) ->
+             let contents = "IF " ^ make_string_condition cond in
+             let line = { position = position; indentation = indentation; content = contents} in
+             (*let lines = [line] @ list_file_lines in *)
+             let block_lines_if = convert_block_to_string block_if (indentation + 2) in
+             
+             if List.length block_else > 0 then
+               
+               let block_lines_else = convert_block_to_string block_else (indentation + 2) in
+               let line_with_if_block = [line] @ block_lines_if  in
+               let else_pos = (List.length block_lines_if) + position + 1 in 
+               let line_else = { position = else_pos; indentation = indentation; content = "ELSE"} in
+               let lines_with_else =  line_with_if_block @ [line_else] in
+               let line_else_content = lines_with_else @ block_lines_else  in
+               (*block_lines_else @ lines_with_else*)
+                list_file_lines @ line_else_content
+               
+             else
+               [line] @ block_lines_if
+               
+           | While (cond, block) ->
+             let contents = "WHILE " ^ make_string_condition cond in
+             let line = { position = position; indentation = indentation; content = contents} in
+             let lines = [line] @ list_file_lines in 
+             let block_lines = convert_block_to_string block (indentation + 2) in
+             lines @ block_lines
+
+       in 
+       let list_file_lines_all = convert_block_to_string sub_list_of_block indentation in
+       let list_file_lines = make_string_instruction position instruction [] indentation in
+       
+       list_file_lines @ list_file_lines_all
+       
+     ;;
+
 let rec make_space indentation result = 
   if indentation <= 0 then
     result
@@ -93,9 +201,42 @@ let rec print_lines file_lines =
       print_string (pos ^ ". " ^ indentation ^ element.content ^ "\n");
       print_lines sub_file_lines;;
 
+let print_polish (p:program) : unit = 
+  let file_lines = convert_block_to_string p 0 in
+  print_string "\n";
+  print_lines file_lines      
+
 (***********************************************************************)
 (*                             read_polish                             *)
-(***********************************************************************)      
+(***********************************************************************)
+
+let rec convert_file_line_list_to_block list_of_file_line block indentation = 
+  match list_of_file_line with
+  | [] -> block
+  | file_line::sub_list_of_file_line ->
+    let first_word = first_word_of_file_line (file_line.content) in
+    let list_of_word = make_list_string_list_without_space_and_first_word (file_line.content) in
+    match first_word with
+    | "READ" -> 
+      let res = (file_line.position, Read "1") :: block in
+      convert_file_line_list_to_block sub_list_of_file_line res indentation 
+    | "PRINT" -> 
+      let res = (file_line.position, Read "2") :: block in
+      convert_file_line_list_to_block sub_list_of_file_line res indentation 
+    | "IF" -> 
+      let res = (file_line.position, Read "3") :: block in
+      convert_file_line_list_to_block sub_list_of_file_line res indentation 
+    | "WHILE" -> 
+      let res = (file_line.position, Read "4") :: block in
+      convert_file_line_list_to_block sub_list_of_file_line res indentation 
+    | _ -> 
+      let res = (file_line.position, Read "5") :: block in
+      convert_file_line_list_to_block sub_list_of_file_line res indentation
+
+let clean_convert_file_line_list_to_block list_of_file_line block indentation = 
+  let list =  convert_file_line_list_to_block list_of_file_line block indentation in
+  List.rev list     
+              
 
 (***********************************************************************)
 (*                Récupération des lignes dans le fichier              *)
@@ -108,11 +249,10 @@ let rec get_file_lines_from_files file position list_of_file_lines =
 
     let line = input_line file in 
     let clean_line = String.trim (line) in
+    let first_word = first_word_of_file_line clean_line in 
 
-    
-    
+    print_string ("Premier mot de la ligne : " ^ first_word ^ "\n");
 
-    let first_word = make_list_string_list_without_space clean_line in 
     if first_word <> "COMMENT"  then
 
       let indentation = get_indentation_from_line line 0 in
@@ -135,14 +275,14 @@ let read_polish (filename:string) : program =
     let file = open_in filename in
     let list_of_file_lines = List.rev (get_file_lines_from_files file 0 []) in
     print_lines list_of_file_lines;
-    []
+    clean_convert_file_line_list_to_block list_of_file_lines [] 0
   with Sys_error _ -> 
     let () = print_endline ("Cannot read filename : " ^ filename) in
     [] ;;
 
 (***********************************************************************)
-
-let print_polish (p:program) : unit = failwith "TODO"
+(*                              Launcher                               *)
+(***********************************************************************)
 
 let eval_polish (p:program) : unit = failwith "TODO"
 
