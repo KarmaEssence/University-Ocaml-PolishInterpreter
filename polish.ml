@@ -103,14 +103,31 @@ let rec obtain_sub_block list_of_file_line indentation list_result =
   match list_of_file_line with 
   | [] -> list_result
   | file_line :: sub_list_of_file_line ->
-  if file_line.indentation < indentation then
-    list_result
-  else
-    obtain_sub_block sub_list_of_file_line indentation (file_line :: list_result)
+    if file_line.indentation < indentation then
+      list_result
+    else
+      obtain_sub_block sub_list_of_file_line indentation (file_line :: list_result)
               
 let obtain_sub_block_clean list_of_file_line indentation list_result = 
   let list = obtain_sub_block list_of_file_line indentation list_result in
-  List.rev list          
+  List.rev list
+  
+let rec obtain_else_sub_block list_of_file_line indentation list_result else_was_readed = 
+  match list_of_file_line with 
+  | [] -> list_result
+  | file_line :: sub_list_of_file_line ->
+    if else_was_readed then
+      obtain_sub_block_clean sub_list_of_file_line indentation list_result
+      
+    else 
+      let first_word = first_word_of_file_line (file_line.content) in
+        
+      if file_line.indentation < indentation && first_word = "ELSE" then
+        obtain_else_sub_block list_of_file_line indentation list_result true
+        
+      else
+        obtain_else_sub_block sub_list_of_file_line indentation list_result else_was_readed  
+                   
 
 (***********************************************************************)
 (*                             print_polish                            *)
@@ -342,9 +359,15 @@ let rec convert_file_line_list_to_block list_of_file_line block indentation =
 
         print_string " after if_sub_list_of_file_line\n";
         print_lines if_sub_list_of_file_line;
+
+        let else_sub_list_of_file_line = obtain_else_sub_block sub_list_of_file_line (file_line.indentation + 2) [] false in
+
+        print_string " after else_sub_list_of_file_line\n";
+        print_lines else_sub_list_of_file_line;
         
         let if_sub_block = convert_file_line_list_to_block if_sub_list_of_file_line [] (indentation + 2) in
-        let res = (file_line.position, If (condition, if_sub_block, [])) :: block in
+        let else_sub_block = convert_file_line_list_to_block else_sub_list_of_file_line [] (indentation + 2) in
+        let res = (file_line.position, If (condition, if_sub_block, else_sub_block)) :: block in
         convert_file_line_list_to_block sub_list_of_file_line res indentation
 
       | "WHILE" -> 
