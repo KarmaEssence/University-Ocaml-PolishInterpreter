@@ -126,8 +126,7 @@ let rec obtain_else_sub_block list_of_file_line indentation list_result else_was
         obtain_else_sub_block list_of_file_line indentation list_result true
         
       else
-        obtain_else_sub_block sub_list_of_file_line indentation list_result else_was_readed  
-                   
+        obtain_else_sub_block sub_list_of_file_line indentation list_result else_was_readed                     
 
 (***********************************************************************)
 (*                             print_polish                            *)
@@ -256,7 +255,8 @@ let is_comp word =
   | ">=" -> true
   | ">"  -> true
   | "="  -> true
-  | _  -> true
+  | "<>" -> true
+  | _  -> false
           
 let is_operator word = 
   match word with
@@ -300,14 +300,48 @@ let get_condition word =
   | _  -> Ne   
 
 
+let rec make_list_of_word_before_operator list_of_word list_result = 
+  match list_of_word with
+  | [] -> list_result
+  | word :: sub_list_of_word ->
+    if is_comp word then
+      list_result
+    else
+      make_list_of_word_before_operator sub_list_of_word (word :: list_result) 
+
+let make_list_of_word_before_operator_clean list_of_word list_result = 
+  let list = make_list_of_word_before_operator list_of_word list_result in 
+  List.rev list
+
+let rec make_list_of_word_after_operator list_of_word =  
+  match list_of_word with
+  | [] -> []
+  | word :: sub_list_of_word ->
+    print_string (word ^ "\n"); 
+    if is_comp word then
+      sub_list_of_word
+    else
+      make_list_of_word_after_operator sub_list_of_word
+
+let rec search_string_operator list_of_word =  
+  match list_of_word with
+  | [] -> ""
+  | word :: sub_list_of_word ->
+    if is_comp word then
+      word
+    else
+      search_string_operator sub_list_of_word
+
 let rec construct_expression list_of_word = 
   let first_word = List.hd list_of_word in
   print_string ("construct_expression first word : " ^ first_word ^ "\n");
   if is_operator first_word then
-    let num = skip_element list_of_word 1 in
-    let sub_string = skip_element list_of_word 2 in
-    let exp_1 = construct_expression num in
-    let exp_2 = construct_expression sub_string in
+    let sub_string_1 = skip_element list_of_word 1 in
+    print_string ("construct_expression num : " ^ List.hd sub_string_1 ^ "\n");
+    let sub_string_2 = skip_element list_of_word 2 in
+    print_string ("construct_expression sub_string : " ^ List.hd sub_string_2 ^ "\n");
+    let exp_1 = construct_expression sub_string_1 in
+    let exp_2 = construct_expression sub_string_2 in
     Op (get_operator first_word, exp_1, exp_2)
 
   else if is_number first_word then
@@ -316,12 +350,14 @@ let rec construct_expression list_of_word =
   else  
     Var (first_word)
   
-let make_condition list_of_words =
-  let list_1 = make_list_string_list_without_space (List.hd list_of_words) in
-  let list_2 = make_list_string_list_without_space (List.nth list_of_words 2) in
-  let exp_1 = construct_expression list_1 in 
-  let exp_2 = construct_expression list_2 in 
-  (exp_1, get_condition (List.nth list_of_words 1), exp_2);;    
+let make_condition list_of_word =
+  let list_1 = make_list_of_word_before_operator_clean list_of_word [] in
+  let list_2 = make_list_of_word_after_operator list_of_word in
+  let exp_1 = construct_expression list_1 in
+  print_string "Je suis ici1\n"; 
+  let exp_2 = construct_expression list_2 in
+  print_string "Je suis ici\n"; 
+  (exp_1, get_condition (search_string_operator list_of_word), exp_2);;    
 
 let rec convert_file_line_list_to_block list_of_file_line block indentation = 
   match list_of_file_line with
@@ -332,10 +368,13 @@ let rec convert_file_line_list_to_block list_of_file_line block indentation =
       convert_file_line_list_to_block sub_list_of_file_line block indentation
 
     else
-
+      
       let first_word = first_word_of_file_line (file_line.content) in
       let list_of_word = make_list_string_list_without_space_and_first_word (file_line.content) in
-      
+
+      print_string " file_line content\n";
+      print_string (file_line.content ^ "\n");
+
       match first_word with
       
       | "READ" -> 
@@ -367,23 +406,26 @@ let rec convert_file_line_list_to_block list_of_file_line block indentation =
         
         let if_sub_block = convert_file_line_list_to_block if_sub_list_of_file_line [] (indentation + 2) in
         let else_sub_block = convert_file_line_list_to_block else_sub_list_of_file_line [] (indentation + 2) in
-        let res = (file_line.position, If (condition, if_sub_block, else_sub_block)) :: block in
+        let res = (file_line.position, If (condition, List.rev if_sub_block, List.rev else_sub_block)) :: block in
         convert_file_line_list_to_block sub_list_of_file_line res indentation
 
       | "WHILE" -> 
+        
+        print_string " while file_line content\n";
+        print_string (file_line.content ^ "\n");
 
         let condition = make_condition list_of_word in
 
-        (*print_string " before while_sub_list_of_file_line\n";
-        print_lines sub_list_of_file_line;*)
+        print_string " before while_sub_list_of_file_line\n";
+        print_lines sub_list_of_file_line;
 
         let while_sub_list_of_file_line = obtain_sub_block_clean sub_list_of_file_line (file_line.indentation + 2) [] in
 
-        (*print_string " after while_sub_list_of_file_line\n";
-        print_lines while_sub_list_of_file_line;*)
+        print_string " after while_sub_list_of_file_line\n";
+        print_lines while_sub_list_of_file_line;
 
         let while_sub_block = convert_file_line_list_to_block while_sub_list_of_file_line [] (indentation + 2) in
-        let res = (file_line.position, While (condition, while_sub_block)) :: block in
+        let res = (file_line.position, While (condition, List.rev while_sub_block)) :: block in
         convert_file_line_list_to_block sub_list_of_file_line res indentation
       
         | _ -> 
