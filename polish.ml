@@ -384,7 +384,7 @@ let rec convert_file_line_list_to_block list_of_file_line block indentation =
 
       | "PRINT" -> 
 
-        let res = (file_line.indentation, Print (construct_expression list_of_word)) :: block in
+        let res = (file_line.position, Print (construct_expression list_of_word)) :: block in
         convert_file_line_list_to_block sub_list_of_file_line res indentation
 
       | "IF" -> 
@@ -480,7 +480,7 @@ let rec get_file_lines_from_files file position list_of_file_lines =
 let read_polish (filename:string) : program = 
   try
     let file = open_in filename in
-    let list_of_file_lines = List.rev (get_file_lines_from_files file 0 []) in
+    let list_of_file_lines = List.rev (get_file_lines_from_files file 1 []) in
     print_lines list_of_file_lines;
     clean_convert_file_line_list_to_block list_of_file_lines [] 0
   with Sys_error _ -> 
