@@ -458,13 +458,14 @@ let read_polish (filename:string) : program =
 let eval_polish (p:program) : unit = failwith "TODO"
 
 let usage () =
+  print_string "\n";
   print_string "Polish : analyse statique d'un mini-langage\n";
-  print_string "usage: à documenter (TODO)\n"
+  print_string "-reprint : affichage du code polish dans le terminal\n"
 
 let main () =
   match Sys.argv with
-  | [|_;"--reprint";file|] -> print_polish (read_polish (String.trim file))
-  | [|_;"--eval";file|] -> eval_polish (read_polish (String.trim file))
+  | [|_;"-reprint";file|] -> print_polish (read_polish (String.trim file))
+  | [|_;"-eval";file|] -> eval_polish (read_polish (String.trim file))
   | _ -> usage ()
 
 (* lancement de ce main *)
