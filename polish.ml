@@ -316,8 +316,7 @@ let make_list_of_word_before_operator_clean list_of_word list_result =
 let rec make_list_of_word_after_operator list_of_word =  
   match list_of_word with
   | [] -> []
-  | word :: sub_list_of_word ->
-    print_string (word ^ "\n"); 
+  | word :: sub_list_of_word -> 
     if is_comp word then
       sub_list_of_word
     else
@@ -334,12 +333,11 @@ let rec search_string_operator list_of_word =
 
 let rec construct_expression list_of_word = 
   let first_word = List.hd list_of_word in
-  print_string ("construct_expression first word : " ^ first_word ^ "\n");
+
   if is_operator first_word then
+
     let sub_string_1 = skip_element list_of_word 1 in
-    print_string ("construct_expression num : " ^ List.hd sub_string_1 ^ "\n");
     let sub_string_2 = skip_element list_of_word 2 in
-    print_string ("construct_expression sub_string : " ^ List.hd sub_string_2 ^ "\n");
     let exp_1 = construct_expression sub_string_1 in
     let exp_2 = construct_expression sub_string_2 in
     Op (get_operator first_word, exp_1, exp_2)
@@ -354,9 +352,7 @@ let make_condition list_of_word =
   let list_1 = make_list_of_word_before_operator_clean list_of_word [] in
   let list_2 = make_list_of_word_after_operator list_of_word in
   let exp_1 = construct_expression list_1 in
-  print_string "Je suis ici1\n"; 
   let exp_2 = construct_expression list_2 in
-  print_string "Je suis ici\n"; 
   (exp_1, get_condition (search_string_operator list_of_word), exp_2);;    
 
 let rec convert_file_line_list_to_block list_of_file_line block indentation = 
@@ -371,9 +367,6 @@ let rec convert_file_line_list_to_block list_of_file_line block indentation =
       
       let first_word = first_word_of_file_line (file_line.content) in
       let list_of_word = make_list_string_list_without_space_and_first_word (file_line.content) in
-
-      print_string " file_line content\n";
-      print_string (file_line.content ^ "\n");
 
       match first_word with
       
@@ -390,19 +383,8 @@ let rec convert_file_line_list_to_block list_of_file_line block indentation =
       | "IF" -> 
 
         let condition = make_condition list_of_word in
-        
-        print_string " before if_sub_list_of_file_line\n";
-        print_lines sub_list_of_file_line;
-        
         let if_sub_list_of_file_line = obtain_sub_block_clean sub_list_of_file_line (file_line.indentation + 2) [] in
-
-        print_string " after if_sub_list_of_file_line\n";
-        print_lines if_sub_list_of_file_line;
-
         let else_sub_list_of_file_line = obtain_else_sub_block sub_list_of_file_line (file_line.indentation + 2) [] false in
-
-        print_string " after else_sub_list_of_file_line\n";
-        print_lines else_sub_list_of_file_line;
         
         let if_sub_block = convert_file_line_list_to_block if_sub_list_of_file_line [] (indentation + 2) in
         let else_sub_block = convert_file_line_list_to_block else_sub_list_of_file_line [] (indentation + 2) in
@@ -411,18 +393,8 @@ let rec convert_file_line_list_to_block list_of_file_line block indentation =
 
       | "WHILE" -> 
         
-        print_string " while file_line content\n";
-        print_string (file_line.content ^ "\n");
-
         let condition = make_condition list_of_word in
-
-        print_string " before while_sub_list_of_file_line\n";
-        print_lines sub_list_of_file_line;
-
         let while_sub_list_of_file_line = obtain_sub_block_clean sub_list_of_file_line (file_line.indentation + 2) [] in
-
-        print_string " after while_sub_list_of_file_line\n";
-        print_lines while_sub_list_of_file_line;
 
         let while_sub_block = convert_file_line_list_to_block while_sub_list_of_file_line [] (indentation + 2) in
         let res = (file_line.position, While (condition, List.rev while_sub_block)) :: block in
@@ -437,7 +409,6 @@ let rec convert_file_line_list_to_block list_of_file_line block indentation =
           convert_file_line_list_to_block sub_list_of_file_line res indentation
 
         else
-
           convert_file_line_list_to_block sub_list_of_file_line block indentation
 
 let clean_convert_file_line_list_to_block list_of_file_line block indentation = 
@@ -451,39 +422,32 @@ let clean_convert_file_line_list_to_block list_of_file_line block indentation =
 
 (*Lis le fichier et récupère toute les lignes renvoie un type file_line*)
 let rec get_file_lines_from_files file position list_of_file_lines =
-  print_string "\n";
   try 
 
     let line = input_line file in 
     let clean_line = String.trim (line) in
     let first_word = first_word_of_file_line clean_line in 
 
-    print_string ("Premier mot de la ligne : " ^ first_word ^ "\n");
-
     if first_word <> "COMMENT"  then
 
       let indentation = get_indentation_from_line line 0 in
-
-      print_string ("Position : " ^ (string_of_int position) ^ "\n") ;
-      print_string ("Indentation : " ^ (string_of_int indentation) ^ "\n") ;
-      print_string ("Content : " ^ clean_line ^ "\n");
-
       let list = add_file_line_to_list position indentation clean_line list_of_file_lines in
       get_file_lines_from_files file (position + 1) (list)
 
     else
-      
       get_file_lines_from_files file (position + 1) list_of_file_lines 
 
   with End_of_file -> list_of_file_lines 
 
 let read_polish (filename:string) : program = 
   try
+
     let file = open_in filename in
     let list_of_file_lines = List.rev (get_file_lines_from_files file 1 []) in
-    print_lines list_of_file_lines;
     clean_convert_file_line_list_to_block list_of_file_lines [] 0
+
   with Sys_error _ -> 
+    
     let () = print_endline ("Cannot read filename : " ^ filename) in
     [] ;;
 
