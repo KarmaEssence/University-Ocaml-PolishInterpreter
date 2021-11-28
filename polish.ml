@@ -450,21 +450,6 @@ let make_simpl_operation op expr_1_res expr_2_res =
   | Div -> Num (get_expr expr_1_res  /  get_expr expr_2_res)
   | Mod -> Num (get_expr expr_1_res  mod  get_expr expr_2_res)
   
-let avoid_exception_with_zero op expr_1 expr_2 = 
-  match op with
-  | Div ->
-    if is_Num expr_2 && (get_expr expr_2) = 0 then
-      false
-    else true  
-
-  | Mod ->
-
-    if is_Num expr_2 && (get_expr expr_2) = 0 then
-      false
-    else true  
-
-  | _ -> true 
-  
 let is_constant_case op expr_1 expr_2 = 
   match op with
   | Add -> 
@@ -488,14 +473,16 @@ let is_constant_case op expr_1 expr_2 =
     else false
 
   | Div ->
-    if ( (is_Var expr_1 && is_Num expr_2 && (get_expr expr_2) = 1) 
-      || (is_Var expr_2 && is_Num expr_1 && (get_expr expr_1) = 1)) then true
+    if ( (is_Var expr_1 && is_Num expr_2 && (get_expr expr_2) = 0) 
+      || (is_Var expr_2 && is_Num expr_1 && (get_expr expr_1) = 0)
+      || (is_Var expr_1 && is_Num expr_2 && (get_expr expr_2) = 1)) then true
 
     else false
 
   | Mod ->
-    if ( (is_Var expr_1 && is_Num expr_2 && (get_expr expr_2) = 1) 
-      || (is_Var expr_2 && is_Num expr_1 && (get_expr expr_1) = 1)) then true
+    if ( (is_Var expr_1 && is_Num expr_2 && (get_expr expr_2) = 0) 
+      || (is_Var expr_2 && is_Num expr_1 && (get_expr expr_1) = 0)
+      || (is_Var expr_1 && is_Num expr_2 && (get_expr expr_2) = 1)) then true
 
     else false 
 
@@ -521,27 +508,34 @@ let make_contant_case op expr_1 expr_2 =
       else expr_2
 
   | Div ->
-    if is_Var expr_1 && is_Num expr_2 then expr_1
-    else expr_2
+    if is_Var expr_1 && is_Num expr_2 then 
+      if get_expr expr_2 = 0 then expr_1
+      else expr_1
+  
+    else 
+      if get_expr expr_1 = 0 then expr_1
+      else Op (op, expr_1, expr_2)
 
   | Mod ->
-    if is_Var expr_1 && is_Num expr_2 then Num(0)
-    else Op (op, expr_1, expr_2)  
+    if is_Var expr_1 && is_Num expr_2 then 
+      if get_expr expr_2 = 0 then expr_1
+      else expr_1
+  
+    else 
+      if get_expr expr_1 = 0 then expr_1
+      else Op (op, expr_1, expr_2) 
 
     
 let make_simpl_expr op expr_1 expr_2 = 
-  if avoid_exception_with_zero op expr_1 expr_2 then
+  if is_constant_case op expr_1 expr_2 then
+    make_contant_case op expr_1 expr_2
+  
+  else 
     if is_Num expr_1 && is_Num expr_2 then
       make_simpl_operation op expr_1 expr_2
 
     else  
-      if is_constant_case op expr_1 expr_2 then
-        make_contant_case op expr_1 expr_2
-
-      else  
-        Op(op, expr_1, expr_2)
-  
-  else expr_1 
+      Op(op, expr_1, expr_2)
 
 
 let rec simpl_expr expr = 

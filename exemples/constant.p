@@ -13,3 +13,4 @@ PRINT * 1 e
 PRINT / e 1
 PRINT / 1 e
 PRINT % e 1
+PRINT % 1 e
