@@ -47,6 +47,7 @@ and block = (position * instr) list
 (** Un programme Polish est un bloc d'instructions *)
 type program = block
 type file_line = { position : position ; indentation : int; content : string}
+module NameTable = Map.Make(String);;
 
 (***********************************************************************)
 (*                      A mettre dans utility-PF5.ml                   *)
@@ -414,12 +415,6 @@ let rec convert_file_line_list_to_block list_of_file_line block indentation =
 let clean_convert_file_line_list_to_block list_of_file_line block indentation = 
   let list =  convert_file_line_list_to_block list_of_file_line block indentation in
   List.rev list   
-  
-(***********************************************************************)
-(*                             eval_polish                             *)
-(***********************************************************************)   
-    
-let eval_polish (p:program) : unit = failwith "TODO"
 
 (***********************************************************************)
 (*                             simpl_polish                            *)
@@ -645,6 +640,54 @@ let simpl_polish (p:program) : program =
   convert_block_to_simpl_block_clean p []
 
 (***********************************************************************)
+(*                             eval_polish                             *)
+(***********************************************************************)
+
+let rec eval_block list_of_block map = 
+  match list_of_block with
+  | [] -> map
+  | (position, instruction) :: sub_list_of_block ->
+
+    match instruction with
+    | Set (name, expr) ->
+
+      let new_map = map in
+      eval_block sub_list_of_block new_map
+
+    | Read (name) ->
+
+      print_string ("Read : Nom de la variable : " ^ name ^ " ?\n");
+      let value = read_int() in
+      print_string ("Read : Vous avez choisi : " ^ name ^ " := " ^ 
+      string_of_int value ^ "\n");
+      let new_map = NameTable.add "name" value map in
+      eval_block sub_list_of_block new_map
+
+    | Print (expr) ->
+
+      print_string ("Print : rien pour le moment \n");
+      let new_map = map in
+      eval_block sub_list_of_block new_map
+
+    | If (cond, block_1, block_2) ->
+      
+      let new_map = map in
+      eval_block sub_list_of_block new_map
+
+    | While (cond, block) ->
+
+      let new_map = map in
+      eval_block sub_list_of_block new_map
+
+let eval_polish (p:program) : unit = 
+  let map = NameTable.empty in 
+  print_string "\n"; 
+  print_string "Début de l'évalutation\n";
+  let res = eval_block p map in
+  print_string "\n"; 
+  print_string "Fin de l'évalutation\n" 
+
+(***********************************************************************)
 (*                Récupération des lignes dans le fichier              *)
 (***********************************************************************)
 
@@ -694,6 +737,8 @@ let main () =
   | [|_;"-reprint";file|] -> print_polish (read_polish (String.trim file))
   | [|_;"-eval";file|] -> eval_polish (simpl_polish (read_polish (String.trim file)))
   | [|_;"-simpl";file|] -> print_polish (simpl_polish (read_polish (String.trim file)))
+  | [|_;"-readint";file|] -> print_string (string_of_int (read_int()) ^ "\n");
+                             print_polish (read_polish (String.trim file))
   | _ -> usage ()
 
 (* lancement de ce main *)
