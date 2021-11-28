@@ -431,6 +431,12 @@ let is_Num expr =
   | Var (_) -> false
   | Op (_) -> false
 
+let is_Var expr = 
+  match expr with
+  | Num (_) -> false
+  | Var (_) -> true
+  | Op (_) -> false  
+
 let get_expr expr = 
   match expr with
   | Num (value) -> value
@@ -457,15 +463,83 @@ let avoid_exception_with_zero op expr_1 expr_2 =
       false
     else true  
 
-  | _ -> true   
+  | _ -> true 
+  
+let is_constant_case op expr_1 expr_2 = 
+  match op with
+  | Add -> 
+    if (is_Var expr_1 && is_Num expr_2 && (get_expr expr_2) = 0) 
+      || (is_Var expr_2 && is_Num expr_1 && (get_expr expr_1) = 0) then true
 
+    else false
+
+  | Sub ->
+    if (is_Var expr_1 && is_Num expr_2 && (get_expr expr_2) = 0) 
+      || (is_Var expr_2 && is_Num expr_1 && (get_expr expr_2) = 0) then true
+
+    else false
+    
+  | Mul -> 
+    if ( (is_Var expr_1 && is_Num expr_2 && (get_expr expr_2) = 0) 
+      || (is_Var expr_2 && is_Num expr_1 && (get_expr expr_1) = 0)
+      || (is_Var expr_1 && is_Num expr_2 && (get_expr expr_2) = 1) 
+      || (is_Var expr_2 && is_Num expr_1 && (get_expr expr_1) = 1)) then true
+
+    else false
+
+  | Div ->
+    if ( (is_Var expr_1 && is_Num expr_2 && (get_expr expr_2) = 1) 
+      || (is_Var expr_2 && is_Num expr_1 && (get_expr expr_1) = 1)) then true
+
+    else false
+
+  | Mod ->
+    if ( (is_Var expr_1 && is_Num expr_2 && (get_expr expr_2) = 1) 
+      || (is_Var expr_2 && is_Num expr_1 && (get_expr expr_1) = 1)) then true
+
+    else false 
+
+let make_contant_case op expr_1 expr_2 =     
+  match op with
+  | Add -> 
+    if is_Var expr_1 && is_Num expr_2 then expr_1
+    else expr_2
+
+  | Sub ->
+    if is_Var expr_1 && is_Num expr_2 then expr_1
+    else expr_2
+    
+  | Mul -> 
+    if is_Var expr_1 && is_Num expr_2 then
+      
+      if get_expr expr_2 = 0 then expr_2
+      else expr_1
+
+    else 
+
+      if get_expr expr_1 = 0 then expr_1
+      else expr_2
+
+  | Div ->
+    if is_Var expr_1 && is_Num expr_2 then expr_1
+    else expr_2
+
+  | Mod ->
+    if is_Var expr_1 && is_Num expr_2 then Num(0)
+    else Op (op, expr_1, expr_2)  
+
+    
 let make_simpl_expr op expr_1 expr_2 = 
   if avoid_exception_with_zero op expr_1 expr_2 then
     if is_Num expr_1 && is_Num expr_2 then
       make_simpl_operation op expr_1 expr_2
 
     else  
-      Op(op, expr_1, expr_2)
+      if is_constant_case op expr_1 expr_2 then
+        make_contant_case op expr_1 expr_2
+
+      else  
+        Op(op, expr_1, expr_2)
   
   else expr_1 
 
@@ -544,7 +618,7 @@ let rec convert_block_to_simpl_block block simpl_block =
           convert_block_to_simpl_block sub_list_of_block convert_sub_block_to_block
 
       else
-        
+
         let convert_sub_if_block_to_if_block = List.rev (convert_block_to_simpl_block block_1 []) in   
         let convert_sub_else_block_to_else_block = List.rev (convert_block_to_simpl_block block_2 []) in
         let block_res = (position, 
