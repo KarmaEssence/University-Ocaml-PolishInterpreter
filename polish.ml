@@ -455,8 +455,7 @@ let is_constant_case op expr_1 expr_2 =
     else false
 
   | Sub ->
-    if (is_Var expr_1 && is_Num expr_2 && (get_expr expr_2) = 0) 
-      || (is_Var expr_2 && is_Num expr_1 && (get_expr expr_1) = 0) then true
+    if (is_Var expr_1 && is_Num expr_2 && (get_expr expr_2) = 0) then true
 
     else false
     
@@ -516,13 +515,14 @@ let make_contant_case op expr_1 expr_2 =
       else Op (op, expr_1, expr_2)
 
   | Mod ->
+    
     if is_Var expr_1 && is_Num expr_2 then 
       if get_expr expr_2 = 0 then Op (op, expr_1, expr_2)
-      else expr_1
+      else Num (0)
   
     else 
       if get_expr expr_1 = 0 then expr_1
-      else Op (op, expr_1, expr_2) 
+      else Op (op, expr_1, expr_2)
 
     
 let make_simpl_expr op expr_1 expr_2 = 
@@ -699,10 +699,10 @@ let rec eval_block list_of_block map =
 
     | Read (name) ->
 
-      print_string ("Read : Nom de la variable : " ^ name ^ " ?\n");
+      print_string (string_of_int position ^ ". " ^ "Read : Nom de la variable : " ^ name ^ " ?\n");
       let value = read_int() in
-      print_string ("Read : Vous avez choisi : " ^ name ^ " := " ^ 
-      string_of_int value ^ "\n");
+      print_string (string_of_int position ^ ". " ^ "Read : Vous avez choisi : " ^ name ^ " := " ^ 
+      string_of_int value ^ "\n\n");
       let new_map = NameTable.add name value map in
       eval_block sub_list_of_block new_map
 
@@ -717,7 +717,7 @@ let rec eval_block list_of_block map =
       
       else
         let error_message = "L'expression n'est pas calculé, une variable doit avoir une valuation" in
-        print_string ("Print :" ^ error_message ^ "\n");  
+        print_string (string_of_int position ^ ". " ^ "Print : " ^ error_message ^ "\n");  
         eval_block sub_list_of_block map
 
     | If (cond, block_1, block_2) ->
