@@ -1,2 +1,2 @@
-READ n
-PRINT + n 1
+READ e
+PRINT - 1 e

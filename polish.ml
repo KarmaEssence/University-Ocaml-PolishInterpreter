@@ -438,6 +438,7 @@ let get_expr expr =
   | _ -> 0  
 
 let make_simpl_operation op expr_1_res expr_2_res = 
+  (*print_string "je suis ici-1";*)
   match op with
   | Add -> Num (get_expr expr_1_res  +  get_expr expr_2_res) 
   | Sub -> Num (get_expr expr_1_res  -  get_expr expr_2_res) 
@@ -455,33 +456,36 @@ let is_constant_case op expr_1 expr_2 =
 
   | Sub ->
     if (is_Var expr_1 && is_Num expr_2 && (get_expr expr_2) = 0) 
-      || (is_Var expr_2 && is_Num expr_1 && (get_expr expr_2) = 0) then true
+      || (is_Var expr_2 && is_Num expr_1 && (get_expr expr_1) = 0) then true
 
     else false
     
   | Mul -> 
-    if ( (is_Var expr_1 && is_Num expr_2 && (get_expr expr_2) = 0) 
+    if   (is_Var expr_1 && is_Num expr_2 && (get_expr expr_2) = 0) 
       || (is_Var expr_2 && is_Num expr_1 && (get_expr expr_1) = 0)
       || (is_Var expr_1 && is_Num expr_2 && (get_expr expr_2) = 1) 
-      || (is_Var expr_2 && is_Num expr_1 && (get_expr expr_1) = 1)) then true
+      || (is_Var expr_2 && is_Num expr_1 && (get_expr expr_1) = 1) then true
 
     else false
 
   | Div ->
-    if ( (is_Var expr_1 && is_Num expr_2 && (get_expr expr_2) = 0) 
+    if   (is_Var expr_1 && is_Num expr_2 && (get_expr expr_2) = 0) 
       || (is_Var expr_2 && is_Num expr_1 && (get_expr expr_1) = 0)
-      || (is_Var expr_1 && is_Num expr_2 && (get_expr expr_2) = 1)) then true
+      || (is_Var expr_1 && is_Num expr_2 && (get_expr expr_2) = 1)
+      || (is_Num expr_1 && is_Num expr_2 && (get_expr expr_2) = 0) then true
 
     else false
 
   | Mod ->
-    if ( (is_Var expr_1 && is_Num expr_2 && (get_expr expr_2) = 0) 
+    if   (is_Var expr_1 && is_Num expr_2 && (get_expr expr_2) = 0) 
       || (is_Var expr_2 && is_Num expr_1 && (get_expr expr_1) = 0)
-      || (is_Var expr_1 && is_Num expr_2 && (get_expr expr_2) = 1)) then true
+      || (is_Var expr_1 && is_Num expr_2 && (get_expr expr_2) = 1)
+      || (is_Num expr_1 && is_Num expr_2 && (get_expr expr_2) = 0) then true
 
     else false 
 
-let make_contant_case op expr_1 expr_2 =     
+let make_contant_case op expr_1 expr_2 = 
+  (*print_string "je suis ici-1";*)   
   match op with
   | Add -> 
     if is_Var expr_1 && is_Num expr_2 then expr_1
@@ -643,17 +647,36 @@ let simpl_polish (p:program) : program =
 (*                             eval_polish                             *)
 (***********************************************************************)
 
+(*let test_expr expr = 
+  match expr with
+  | Num (value) -> 
+    print_string "num";
+  | Var (name) ->   
+    print_string "var";
+  | Op (op, expr_1, expr_2) ->
+    print_string "op"*)
+    
 let rec eval_expr expr map = 
   match expr with
-  | Num (value) -> Num (value)
+  | Num (value) -> 
+    (*let error = "je suis ici-5\n" in
+    print_string error;*)
+    Num (value)
   | Var (name) -> 
     
+    (*print_string name;*)
     if NameTable.mem name map then
+      (*let error = "je suis ici-3\n" in
+      print_string error;*)
       Num (NameTable.find name map)
     else
+      (*let error = "je suis ici-4\n" in
+      print_string error;*)
       Var (name)   
 
   | Op (op, expr_1, expr_2) ->
+    (*let error = "je suis ici-6\n" in
+    print_string error;*)
     let expr_1_res = eval_expr expr_1 map in
     let expr_2_res = eval_expr expr_2 map in
     make_simpl_expr op expr_1_res expr_2_res
@@ -685,9 +708,10 @@ let rec eval_block list_of_block map =
 
     | Print (expr) ->
 
+      (*test_expr expr;*)
       let expr_res = eval_expr expr map in
       if is_Num expr_res then
-        let value_message = "Print : " ^ string_of_int (get_expr expr_res)  ^ "\n" in
+        let value_message = string_of_int position ^ ". " ^ "Print : " ^ string_of_int (get_expr expr_res)  ^ "\n" in
         print_string value_message;
         eval_block sub_list_of_block map
       
