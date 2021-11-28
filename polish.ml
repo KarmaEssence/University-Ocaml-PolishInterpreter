@@ -509,7 +509,7 @@ let make_contant_case op expr_1 expr_2 =
 
   | Div ->
     if is_Var expr_1 && is_Num expr_2 then 
-      if get_expr expr_2 = 0 then expr_1
+      if get_expr expr_2 = 0 then Op (op, expr_1, expr_2)
       else expr_1
   
     else 
@@ -518,7 +518,7 @@ let make_contant_case op expr_1 expr_2 =
 
   | Mod ->
     if is_Var expr_1 && is_Num expr_2 then 
-      if get_expr expr_2 = 0 then expr_1
+      if get_expr expr_2 = 0 then Op (op, expr_1, expr_2)
       else expr_1
   
     else 
