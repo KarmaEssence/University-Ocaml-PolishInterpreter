@@ -413,8 +413,112 @@ let rec convert_file_line_list_to_block list_of_file_line block indentation =
 
 let clean_convert_file_line_list_to_block list_of_file_line block indentation = 
   let list =  convert_file_line_list_to_block list_of_file_line block indentation in
-  List.rev list     
-              
+  List.rev list   
+  
+(***********************************************************************)
+(*                             eval_polish                             *)
+(***********************************************************************)   
+    
+let eval_polish (p:program) : unit = failwith "TODO"
+
+(***********************************************************************)
+(*                             simpl_polish                            *)
+(***********************************************************************)
+
+let is_Num expr = 
+  match expr with
+  | Num (_) -> true
+  | Var (_) -> false
+  | Op (_) -> false
+
+let get_expr expr = 
+  match expr with
+  | Num (value) -> value
+  | _ -> 0  
+
+let make_simpl_operation op expr_1_res expr_2_res = 
+  match op with
+  | Add -> Num (get_expr expr_1_res  +  get_expr expr_2_res) 
+  | Sub -> Num (get_expr expr_1_res  -  get_expr expr_2_res) 
+  | Mul -> Num (get_expr expr_1_res  *  get_expr expr_2_res)  
+  | Div -> Num (get_expr expr_1_res  /  get_expr expr_2_res)
+  | Mod -> Num (get_expr expr_1_res  mod  get_expr expr_2_res)
+  
+let avoid_exception_with_zero op expr_1 expr_2 = 
+  match op with
+  | Div ->
+    if is_Num expr_2 && (get_expr expr_2) = 0 then
+      false
+    else true  
+
+  | Mod ->
+
+    if is_Num expr_2 && (get_expr expr_2) = 0 then
+      false
+    else true  
+
+  | _ -> true   
+
+let make_simpl_expr op expr_1 expr_2 = 
+  if avoid_exception_with_zero op expr_1 expr_2 then
+    if is_Num expr_1 && is_Num expr_2 then
+      make_simpl_operation op expr_1 expr_2
+
+    else  
+      Op(op, expr_1, expr_2)
+  
+  else expr_1     
+
+let rec simpl_expr expr = 
+  match expr with
+  | Num (value) -> Num (value)
+  | Var (name) -> Var (name)
+  | Op (op, expr_1, expr_2) ->
+    let expr_1_res = simpl_expr expr_1 in
+    let expr_2_res = simpl_expr expr_2 in
+    make_simpl_expr op expr_1_res expr_2_res
+
+let rec convert_block_to_simpl_block block simpl_block = 
+  match block with
+  | [] -> simpl_block
+  | (position, instruction)::sub_list_of_block ->
+
+    match instruction with 
+    | Set (name, expr) ->
+      
+      let expr_res = simpl_expr expr in
+      let block_res = (position, Set(name, expr_res)) :: simpl_block in
+      convert_block_to_simpl_block sub_list_of_block block_res 
+
+    | Read (name) ->
+
+      let block_res = (position, Read (name)) :: simpl_block  in
+      convert_block_to_simpl_block sub_list_of_block block_res
+
+    | Print (expr) ->
+
+      let expr_res = simpl_expr expr in
+      let block_res = (position, Print(expr_res)) :: simpl_block in
+      convert_block_to_simpl_block sub_list_of_block block_res 
+
+    | If (cond, block_1, block_2) ->
+
+      let cond_res = cond in
+      let block_res = (position, If (cond_res, block_1, block_2)) :: simpl_block in
+      convert_block_to_simpl_block sub_list_of_block block_res
+
+    | While (cond, block) ->
+
+      let cond_res = cond in
+      let block_res = (position, While (cond_res, block)) :: simpl_block in
+      convert_block_to_simpl_block sub_list_of_block block_res
+
+let convert_block_to_simpl_block_clean block simpl_block = 
+  let list = convert_block_to_simpl_block block simpl_block in
+  List.rev list
+
+let simpl_polish (p:program) : program = 
+  convert_block_to_simpl_block_clean p []
 
 (***********************************************************************)
 (*                Récupération des lignes dans le fichier              *)
@@ -449,23 +553,23 @@ let read_polish (filename:string) : program =
   with Sys_error _ -> 
     
     let () = print_endline ("Cannot read filename : " ^ filename) in
-    [] ;;
+    [] ;;   
 
 (***********************************************************************)
 (*                              Launcher                               *)
 (***********************************************************************)
 
-let eval_polish (p:program) : unit = failwith "TODO"
-
 let usage () =
   print_string "\n";
   print_string "Polish : analyse statique d'un mini-langage\n";
-  print_string "-reprint : affichage du code polish dans le terminal\n"
+  print_string "-reprint : affichage du code polish dans le terminal\n";
+  print_string "-simpl : simplifie le code polish\n"
 
 let main () =
   match Sys.argv with
   | [|_;"-reprint";file|] -> print_polish (read_polish (String.trim file))
   | [|_;"-eval";file|] -> eval_polish (read_polish (String.trim file))
+  | [|_;"-simpl";file|] -> print_polish (simpl_polish (read_polish (String.trim file)))
   | _ -> usage ()
 
 (* lancement de ce main *)
