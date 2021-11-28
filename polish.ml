@@ -467,7 +467,8 @@ let make_simpl_expr op expr_1 expr_2 =
     else  
       Op(op, expr_1, expr_2)
   
-  else expr_1     
+  else expr_1 
+
 
 let rec simpl_expr expr = 
   match expr with
@@ -477,6 +478,33 @@ let rec simpl_expr expr =
     let expr_1_res = simpl_expr expr_1 in
     let expr_2_res = simpl_expr expr_2 in
     make_simpl_expr op expr_1_res expr_2_res
+
+let simpl_cond cond = 
+  match cond with
+  | (expr_1, comp, expr_2) ->
+    let expr_1_res = simpl_expr expr_1 in
+    let expr_2_res = simpl_expr expr_2 in
+    (expr_1_res, comp, expr_2_res)
+
+let can_simpl_if_blocks cond = 
+  match cond with
+  | (expr_1, comp, expr_2) ->
+    
+    if is_Num expr_1 && is_Num expr_2 then true
+    else false
+
+let choose_simpl_if_block cond = 
+  match cond with
+  | (expr_1, comp, expr_2) ->
+    
+    match comp with
+    | Eq -> expr_1 = expr_2
+    | Ne -> expr_1 <> expr_2
+    | Lt -> expr_1 < expr_2
+    | Le -> expr_1 <= expr_2
+    | Gt -> expr_1 > expr_2
+    | Ge -> expr_1 >= expr_2
+
 
 let rec convert_block_to_simpl_block block simpl_block = 
   match block with
@@ -503,9 +531,24 @@ let rec convert_block_to_simpl_block block simpl_block =
 
     | If (cond, block_1, block_2) ->
 
-      let cond_res = cond in
-      let block_res = (position, If (cond_res, block_1, block_2)) :: simpl_block in
-      convert_block_to_simpl_block sub_list_of_block block_res
+      let cond_res = simpl_cond cond in
+
+      if can_simpl_if_blocks cond_res then
+
+        if  choose_simpl_if_block cond then
+          let convert_sub_block_to_block = convert_block_to_simpl_block block_1 simpl_block in 
+          print_string "Je suis ici-1 \n";
+          convert_block_to_simpl_block sub_list_of_block convert_sub_block_to_block
+        
+        else 
+          let convert_sub_block_to_block = convert_block_to_simpl_block block_2 simpl_block in
+          print_string "Je suis ici-2 \n"; 
+          convert_block_to_simpl_block sub_list_of_block convert_sub_block_to_block
+
+      else   
+        let block_res = (position, If (cond_res, block_1, block_2)) :: simpl_block in
+        print_string "Je suis ici-3 \n";
+        convert_block_to_simpl_block sub_list_of_block block_res
 
     | While (cond, block) ->
 
