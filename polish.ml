@@ -543,8 +543,12 @@ let rec convert_block_to_simpl_block block simpl_block =
           let convert_sub_block_to_block = convert_block_to_simpl_block block_2 simpl_block in
           convert_block_to_simpl_block sub_list_of_block convert_sub_block_to_block
 
-      else   
-        let block_res = (position, If (cond_res, block_1, block_2)) :: simpl_block in
+      else
+        
+        let convert_sub_if_block_to_if_block = List.rev (convert_block_to_simpl_block block_1 []) in   
+        let convert_sub_else_block_to_else_block = List.rev (convert_block_to_simpl_block block_2 []) in
+        let block_res = (position, 
+        If (cond_res, convert_sub_if_block_to_if_block, convert_sub_else_block_to_else_block)) :: simpl_block in
         convert_block_to_simpl_block sub_list_of_block block_res
 
     | While (cond, block) ->
@@ -561,8 +565,8 @@ let rec convert_block_to_simpl_block block simpl_block =
           convert_block_to_simpl_block sub_list_of_block block_res   
 
       else  
-
-        let block_res = (position, While (cond_res, block)) :: simpl_block in
+        let convert_sub_block_to_block = List.rev (convert_block_to_simpl_block block []) in 
+        let block_res = (position, While (cond_res, convert_sub_block_to_block)) :: simpl_block in
         convert_block_to_simpl_block sub_list_of_block block_res
 
 let convert_block_to_simpl_block_clean block simpl_block = 
