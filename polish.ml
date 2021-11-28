@@ -643,6 +643,21 @@ let simpl_polish (p:program) : program =
 (*                             eval_polish                             *)
 (***********************************************************************)
 
+let rec eval_expr expr map = 
+  match expr with
+  | Num (value) -> Num (value)
+  | Var (name) -> 
+    
+    if NameTable.mem name map then
+      Num (NameTable.find name map)
+    else
+      Var (name)   
+
+  | Op (op, expr_1, expr_2) ->
+    let expr_1_res = eval_expr expr_1 map in
+    let expr_2_res = eval_expr expr_2 map in
+    make_simpl_expr op expr_1_res expr_2_res
+
 let rec eval_block list_of_block map = 
   match list_of_block with
   | [] -> map
@@ -650,9 +665,14 @@ let rec eval_block list_of_block map =
 
     match instruction with
     | Set (name, expr) ->
+      
+      let expr_res = eval_expr expr map in
+      if is_Num expr_res then 
+        let new_map = NameTable.add name (get_expr expr_res) map in
+        eval_block sub_list_of_block new_map
 
-      let new_map = map in
-      eval_block sub_list_of_block new_map
+      else
+        eval_block sub_list_of_block map
 
     | Read (name) ->
 
@@ -660,14 +680,21 @@ let rec eval_block list_of_block map =
       let value = read_int() in
       print_string ("Read : Vous avez choisi : " ^ name ^ " := " ^ 
       string_of_int value ^ "\n");
-      let new_map = NameTable.add "name" value map in
+      let new_map = NameTable.add name value map in
       eval_block sub_list_of_block new_map
 
     | Print (expr) ->
 
-      print_string ("Print : rien pour le moment \n");
-      let new_map = map in
-      eval_block sub_list_of_block new_map
+      let expr_res = eval_expr expr map in
+      if is_Num expr_res then
+        let value_message = "Print : " ^ string_of_int (get_expr expr_res)  ^ "\n" in
+        print_string value_message;
+        eval_block sub_list_of_block map
+      
+      else
+        let error_message = "L'expression n'est pas calculé, une variable doit avoir une valuation" in
+        print_string ("Print :" ^ error_message ^ "\n");  
+        eval_block sub_list_of_block map
 
     | If (cond, block_1, block_2) ->
       

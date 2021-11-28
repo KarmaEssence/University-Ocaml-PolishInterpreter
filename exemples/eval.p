@@ -1,2 +1,2 @@
 READ n
-PRINT + e 0
+PRINT + n 1
