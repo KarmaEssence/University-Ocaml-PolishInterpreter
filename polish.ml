@@ -692,7 +692,7 @@ let usage () =
 let main () =
   match Sys.argv with
   | [|_;"-reprint";file|] -> print_polish (read_polish (String.trim file))
-  | [|_;"-eval";file|] -> eval_polish (read_polish (String.trim file))
+  | [|_;"-eval";file|] -> eval_polish (simpl_polish (read_polish (String.trim file)))
   | [|_;"-simpl";file|] -> print_polish (simpl_polish (read_polish (String.trim file)))
   | _ -> usage ()
 
