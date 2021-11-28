@@ -554,18 +554,15 @@ let rec convert_block_to_simpl_block block simpl_block =
         
         if (choose_simpl_block cond) = false then
           let convert_sub_block_to_block = convert_block_to_simpl_block block simpl_block in 
-          print_string "Je suis ici-1 \n";
           convert_block_to_simpl_block sub_list_of_block convert_sub_block_to_block
 
         else
           let block_res = (position, While (cond_res, block)) :: simpl_block in
-          print_string "Je suis ici-2 \n";
           convert_block_to_simpl_block sub_list_of_block block_res   
 
       else  
 
         let block_res = (position, While (cond_res, block)) :: simpl_block in
-        print_string "Je suis ici-3 \n";
         convert_block_to_simpl_block sub_list_of_block block_res
 
 let convert_block_to_simpl_block_clean block simpl_block = 
