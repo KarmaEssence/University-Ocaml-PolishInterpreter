@@ -23,7 +23,7 @@ let usage () =
   print_string "\n";
   print_string "Polish : analyse statique d'un mini-langage\n";
   print_string "-reprint : affichage du code polish dans le terminal\n";
-  print_string "-simpl : évalue le code polish\n"
+  print_string "-simpl : évalue le code polish\n";
   print_string "-simpl : simplifie le code polish\n"
 
 let main () =
