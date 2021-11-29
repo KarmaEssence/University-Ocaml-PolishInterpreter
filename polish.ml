@@ -645,7 +645,7 @@ let rec convert_block_to_simpl_block block simpl_block =
 
       if can_simpl_block cond_res then
 
-        if choose_simpl_block cond then
+        if choose_simpl_block cond_res then
           let convert_sub_block_to_block = convert_block_to_simpl_block block_1 simpl_block in 
           convert_block_to_simpl_block sub_list_of_block convert_sub_block_to_block
         
@@ -666,7 +666,7 @@ let rec convert_block_to_simpl_block block simpl_block =
       let cond_res = simpl_cond cond in
       if can_simpl_block cond_res then
         
-        if (choose_simpl_block cond) = false then
+        if (choose_simpl_block cond_res) = false then
           let convert_sub_block_to_block = convert_block_to_simpl_block block simpl_block in 
           convert_block_to_simpl_block sub_list_of_block convert_sub_block_to_block
 
@@ -717,6 +717,13 @@ let rec eval_expr expr map =
     let expr_2_res = eval_expr expr_2 map in
     make_simpl_expr op expr_1_res expr_2_res
 
+let eval_condition cond map = 
+  match cond with
+  | (expr_1, comp, expr_2) ->
+    let expr_1_res = eval_expr expr_1 map in
+    let expr_2_res = eval_expr expr_2 map in
+    (expr_1_res, comp, expr_2_res)   
+
 let rec eval_block list_of_block map = 
   match list_of_block with
   | [] -> map
@@ -744,7 +751,7 @@ let rec eval_block list_of_block map =
 
     | Print (expr) ->
 
-      test_expr expr;
+      (*test_expr expr;*)
       let expr_res = eval_expr expr map in
       (*print_string "After\n";
       test_expr expr;*)
@@ -760,14 +767,36 @@ let rec eval_block list_of_block map =
         eval_block sub_list_of_block map
 
     | If (cond, block_1, block_2) ->
-      
-      let new_map = map in
-      eval_block sub_list_of_block new_map
+
+      let cond_res = eval_condition cond map in
+      if can_simpl_block cond_res then
+
+        if choose_simpl_block cond_res then
+          let new_map = eval_block block_1 map in
+          eval_block sub_list_of_block new_map
+        
+        else 
+          let new_map = eval_block block_2 map in
+          eval_block sub_list_of_block new_map
+
+      else
+        eval_block sub_list_of_block map      
 
     | While (cond, block) ->
 
-      let new_map = map in
-      eval_block sub_list_of_block new_map
+      let cond_res = eval_condition cond map in
+      if can_simpl_block cond_res then
+        
+        if (choose_simpl_block cond_res) = false then
+          eval_block sub_list_of_block map
+
+        else
+          let new_map = eval_block block map in
+          eval_block list_of_block new_map
+          
+
+      else  
+        eval_block sub_list_of_block map
 
 let eval_polish (p:program) : unit = 
   let map = NameTable.empty in 

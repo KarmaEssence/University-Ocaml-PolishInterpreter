@@ -1,2 +1,4 @@
-READ e
-PRINT - 1 e
+READ n
+WHILE 6 < 5
+  PRINT n
+  n := + n 1
