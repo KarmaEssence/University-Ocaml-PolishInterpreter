@@ -1,4 +1,6 @@
 READ e
+res := - 0 e
+PRINT res
 PRINT + e 10
 PRINT + 0 e
 PRINT - e 0

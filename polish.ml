@@ -702,7 +702,7 @@ let rec eval_expr expr map =
     
     (*print_string name;*)
     if NameTable.mem name map then
-      (*let error = "je suis ici-3\n" in
+      (*let error = (string_of_int (NameTable.find name map)) ^ "je suis ici-3\n" in
       print_string error;*)
       Num (NameTable.find name map)
     else
@@ -738,7 +738,10 @@ let rec eval_block list_of_block map =
         eval_block sub_list_of_block new_map
 
       else
-        eval_block sub_list_of_block map
+        let error_message = "L'expression n'est pas calculé, une variable doit avoir une valuation" in
+        print_string (string_of_int position ^ ". " ^ name ^" : " ^ error_message ^ "\n");  
+        (*eval_block sub_list_of_block map*)
+        exit 1
 
     | Read (name) ->
 
@@ -764,7 +767,8 @@ let rec eval_block list_of_block map =
        
         let error_message = "L'expression n'est pas calculé, une variable doit avoir une valuation" in
         print_string (string_of_int position ^ ". " ^ "Print : " ^ error_message ^ "\n");  
-        eval_block sub_list_of_block map
+        (*eval_block sub_list_of_block map*)
+        exit 1
 
     | If (cond, block_1, block_2) ->
 
@@ -772,15 +776,21 @@ let rec eval_block list_of_block map =
       if can_simpl_block cond_res then
 
         if choose_simpl_block cond_res then
+
           let new_map = eval_block block_1 map in
+          print_string "Je suis ici-1";
           eval_block sub_list_of_block new_map
         
         else 
           let new_map = eval_block block_2 map in
+          print_string "Je suis ici-2";
           eval_block sub_list_of_block new_map
 
       else
-        eval_block sub_list_of_block map      
+        let error_message = "L'expression n'est pas calculé, une variable doit avoir une valuation" in
+        print_string (string_of_int position ^ ". " ^ "If : " ^ error_message ^ "\n");  
+        (*eval_block sub_list_of_block map*)
+        exit 1     
 
     | While (cond, block) ->
 
@@ -796,7 +806,10 @@ let rec eval_block list_of_block map =
           
 
       else  
-        eval_block sub_list_of_block map
+        let error_message = "L'expression n'est pas calculé, une variable doit avoir une valuation" in
+        print_string (string_of_int position ^ ". " ^ "While : " ^ error_message ^ "\n");  
+        (*eval_block sub_list_of_block map*)
+        exit 1
 
 let eval_polish (p:program) : unit = 
   let map = NameTable.empty in 
