@@ -268,19 +268,27 @@ let is_operator word =
   | "%" -> true
   | _ -> false  
                       
-let is_number word =  
-  match word with
-  | "0" -> true
-  | "1"  -> true
-  | "2" -> true
-  | "3" -> true
-  | "4" -> true
-  | "5" -> true
-  | "6" -> true
-  | "7" -> true
-  | "8" -> true
-  | "9" -> true
-  | _ -> false  
+let rec is_number list_of_char =  
+  match list_of_char with
+  | [] -> 
+    (*print_string "test-1";*)
+    true
+  | character :: sub_list_of_char ->
+    
+    let characters = String.make 1 character in
+    (*print_string ("test-2 : " ^ characters);*)
+    match characters with
+    | "0" -> is_number sub_list_of_char
+    | "1"  -> is_number sub_list_of_char
+    | "2" -> is_number sub_list_of_char
+    | "3" -> is_number sub_list_of_char
+    | "4" -> is_number sub_list_of_char
+    | "5" -> is_number sub_list_of_char
+    | "6" -> is_number sub_list_of_char
+    | "7" -> is_number sub_list_of_char
+    | "8" -> is_number sub_list_of_char
+    | "9" -> is_number sub_list_of_char
+    | _ -> false  
              
            
 let get_operator word = 
@@ -332,8 +340,23 @@ let rec search_string_operator list_of_word =
     else
       search_string_operator sub_list_of_word
 
+
+let rec construct_list_of_char string list_of_char = 
+  if String.length string <> List.length list_of_char then
+    let list_of_char_update = String.get string (List.length list_of_char) :: list_of_char in 
+    construct_list_of_char string list_of_char_update
+  else
+    list_of_char
+    
+let construct_list_of_char_clean string list_of_char = 
+  let list = construct_list_of_char string list_of_char in
+  List.rev list
+
 let rec construct_expression list_of_word = 
   let first_word = List.hd list_of_word in
+  (*print_string "testttt-3\n";*)
+  let first_word_list_of_char = construct_list_of_char first_word [] in
+  (*print_string "testttt-4\n";*)
 
   if is_operator first_word then
 
@@ -343,7 +366,12 @@ let rec construct_expression list_of_word =
     let exp_2 = construct_expression sub_string_2 in
     Op (get_operator first_word, exp_1, exp_2)
 
-  else if is_number first_word then
+  else if is_number first_word_list_of_char then
+    
+    (*let test = ("Mon premier mot est : " ^ first_word) in 
+    print_string "\n";
+    print_string test;
+    print_string "\n";*)
     Num (int_of_string first_word)
 
   else  
@@ -419,6 +447,17 @@ let clean_convert_file_line_list_to_block list_of_file_line block indentation =
 (***********************************************************************)
 (*                             simpl_polish                            *)
 (***********************************************************************)
+
+let rec test_expr expr = 
+  match expr with
+  | Num (value) -> 
+    print_string "num\n";
+  | Var (name) ->   
+    print_string "var\n";
+  | Op (op, expr_1, expr_2) ->
+    print_string "op\n";
+    test_expr expr_1;
+    test_expr expr_2
 
 let is_Num expr = 
   match expr with
@@ -592,7 +631,11 @@ let rec convert_block_to_simpl_block block simpl_block =
 
     | Print (expr) ->
 
+      
+      (*test_expr expr;*)
       let expr_res = simpl_expr expr in
+      (*print_string "After\n";
+      test_expr expr_res;*)
       let block_res = (position, Print(expr_res)) :: simpl_block in
       convert_block_to_simpl_block sub_list_of_block block_res 
 
@@ -647,14 +690,7 @@ let simpl_polish (p:program) : program =
 (*                             eval_polish                             *)
 (***********************************************************************)
 
-(*let test_expr expr = 
-  match expr with
-  | Num (value) -> 
-    print_string "num";
-  | Var (name) ->   
-    print_string "var";
-  | Op (op, expr_1, expr_2) ->
-    print_string "op"*)
+
     
 let rec eval_expr expr map = 
   match expr with
@@ -708,14 +744,17 @@ let rec eval_block list_of_block map =
 
     | Print (expr) ->
 
-      (*test_expr expr;*)
+      test_expr expr;
       let expr_res = eval_expr expr map in
+      (*print_string "After\n";
+      test_expr expr;*)
       if is_Num expr_res then
         let value_message = string_of_int position ^ ". " ^ "Print : " ^ string_of_int (get_expr expr_res)  ^ "\n" in
         print_string value_message;
         eval_block sub_list_of_block map
       
       else
+       
         let error_message = "L'expression n'est pas calculé, une variable doit avoir une valuation" in
         print_string (string_of_int position ^ ". " ^ "Print : " ^ error_message ^ "\n");  
         eval_block sub_list_of_block map
