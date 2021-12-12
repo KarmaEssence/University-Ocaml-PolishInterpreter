@@ -46,4 +46,45 @@ Execution du projet :
 
     (Plus de détails sur les options dans le fichier polish.ml)
 
-    
+(***********************************************************************)
+(*                           4. Découpage modulaire                    *)                       
+(***********************************************************************)  
+
+Module Types : 
+
+    - Description : Pour stocker les données d'un code polish
+    - Utilité : Tous les modules en ont besoin
+
+Module Polish : 
+
+    - Description : Renvoie le résultat d'une commande
+    - Utilité : Utile pour récupérer le résultat   
+
+Module Polish : 
+
+    - Description : Renvoie le résultat d'une commande
+    - Utilité : Utile pour récupérer le résultat 
+
+Module Read_polish : 
+
+    - Description : Transformation de la syntaxe concrète (Polish) en syntaxe abstraite (ocaml)
+    - Utilité : Utile pour les modules print_polish, eval_polish, simpl_polish           
+     
+Module Print_polish : 
+
+    - Description : Réaffichage du code en syntaxe concrète (Polish)
+    - Utilité : Ne dépend d'aucun module   
+
+Module Eval_polish : 
+
+    - Description : Evalutation du code en syntaxe abstraite (ocaml)
+    - Utilité : Ne dépend d'aucun module 
+
+Module simpl_polish : 
+
+    - Description : Simplification du code en syntaxe abstraite (ocaml)
+    - Utilité : Ne dépend d'aucun module                 
+                     
+(***********************************************************************)
+(*                           5. Organisation du travail                *)                       
+(***********************************************************************) 
