@@ -1,0 +1,49 @@
+(***********************************************************************)
+(*                           1. Identifiants                           *)                       
+(***********************************************************************)
+
+Etudiant 1:
+
+Nom : Le Corre
+Prénom : Léo 
+Pseudonyme personnel : KarmaEssence
+Identifiant : @lecorre
+Numéro d'étudiant : 21951620
+
+Etudiant 2:
+
+Nom : Quach
+Prénom : Kévin 
+Pseudonyme personnel : Ibbo
+Identifiant : @quach
+Numéro d'étudiant : 71800727
+
+(***********************************************************************)
+(*                           2. Fonctionnalités                        *)                       
+(***********************************************************************)
+
+Fonctionnalités du rendu 1 : 
+
+    - "read_polish" : Transformation de la syntaxe concrète (Polish) en syntaxe abstraite (ocaml)
+    - "print_polish" : Transformation de la syntaxe abstraite (ocaml) en syntaxe concrète (Polish),
+                       puis affichage du code obtenu
+
+Fonctionnalités du rendu 2 :  
+
+    - "simpl_polish" : Prend du code abstrait en entré et renvoie une version simplifié de ce programme
+    
+(***********************************************************************)
+(*                           3. Compilation et exécution               *)                       
+(***********************************************************************) 
+
+Compilation du projet : 
+
+    make
+
+Execution du projet : 
+
+    ./run -<option> <Nom du fichier> 
+
+    (Plus de détails sur les options dans le fichier polish.ml)
+
+    
