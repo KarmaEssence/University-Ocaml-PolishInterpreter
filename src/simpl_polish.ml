@@ -12,7 +12,6 @@ open Utility_pf5
  
 
 let make_simpl_operation op expr_1_res expr_2_res = 
-  (*print_string "je suis ici-1";*)
   match op with
   | Add -> Num (get_expr expr_1_res  +  get_expr expr_2_res) 
   | Sub -> Num (get_expr expr_1_res  -  get_expr expr_2_res) 
@@ -58,7 +57,6 @@ let is_constant_case op expr_1 expr_2 =
     else false 
 
 let make_contant_case op expr_1 expr_2 = 
-  (*print_string "je suis ici-1";*)   
   match op with
   | Add -> 
     if is_Var expr_1 && is_Num expr_2 then expr_1
