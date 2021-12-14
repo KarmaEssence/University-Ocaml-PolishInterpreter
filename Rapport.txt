@@ -7,7 +7,7 @@ Etudiant 1:
 Nom : Le Corre
 Prénom : Léo 
 Pseudonyme personnel : KarmaEssence
-Identifiant : @lecorre
+Identifiant gitlab : @lecorre
 Numéro d'étudiant : 21951620
 
 Etudiant 2:
@@ -15,7 +15,7 @@ Etudiant 2:
 Nom : Quach
 Prénom : Kévin 
 Pseudonyme personnel : Ibbo
-Identifiant : @quach
+Identifiant gitlab : @quach
 Numéro d'étudiant : 71800727
 
 (***********************************************************************)
@@ -43,6 +43,12 @@ Compilation du projet :
 Execution du projet : 
 
     ./run -<option> <Nom du fichier> 
+
+    options disponibles : 
+
+    ./run -reprint <Nom du fichier>
+    ./run -eval <Nom du fichier>
+    ./run -simpl <Nom du fichier>
 
     (Plus de détails sur les options dans le fichier polish.ml)
 
@@ -88,3 +94,23 @@ Module simpl_polish :
 (***********************************************************************)
 (*                           5. Organisation du travail                *)                       
 (***********************************************************************) 
+
+Du 30 novembre au 3 décembre : 
+
+    - Début du projet, étude du sujet, réflexion sur la distribution du travail (par Léo et Kévin)
+    - Mise en place du read et print polish (par Léo)
+
+Du 3 décembre au 8 décembre :
+
+    - Mise en place du simpl polish (par Kévin)
+
+Du 8 décembre au 15 décembre : 
+    
+    - Mise en place du eval polish à l'aide de simpl polish (par Kévin)
+    - Correction du code, creation du fichier Rapport.txt (par Léo)
+
+(***********************************************************************)
+(*                           6. Misc                                   *)                       
+(***********************************************************************)    
+
+Pourrez-vous nous signaler des erreurs sur les options déjà présentes ?
