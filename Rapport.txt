@@ -81,7 +81,7 @@ Module Eval_polish :
     - Description : Evalutation du code en syntaxe abstraite (ocaml)
     - Utilité : Ne dépend d'aucun module 
 
-Module simpl_polish : 
+Module Simpl_polish : 
 
     - Description : Simplification du code en syntaxe abstraite (ocaml)
     - Utilité : Ne dépend d'aucun module                 
