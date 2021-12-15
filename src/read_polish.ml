@@ -9,6 +9,7 @@ open Utility_pf5
 (*                             read_polish                             *)
 (***********************************************************************)
 
+(*Renvoie la liste de mot avant d'avoir vu l'operateur de comparaison*) 
 let rec make_list_of_word_before_operator list_of_word list_result = 
   match list_of_word with
   | [] -> list_result
@@ -18,10 +19,12 @@ let rec make_list_of_word_before_operator list_of_word list_result =
     else
       make_list_of_word_before_operator sub_list_of_word (word :: list_result) 
 
+(*Renvoie la liste de mot (dans le bon ordre) avant d'avoir vu l'operateur de comparaison*)     
 let make_list_of_word_before_operator_clean list_of_word list_result = 
   let list = make_list_of_word_before_operator list_of_word list_result in 
   List.rev list
 
+(*Renvoie la liste de mot apres avoir vu l'operateur de comparaison*)  
 let rec make_list_of_word_after_operator list_of_word =  
   match list_of_word with
   | [] -> []
@@ -31,6 +34,7 @@ let rec make_list_of_word_after_operator list_of_word =
     else
       make_list_of_word_after_operator sub_list_of_word
 
+(*Renvoie l'operateur de comparaison dans la liste de mot*)      
 let rec search_string_operator list_of_word =  
   match list_of_word with
   | [] -> ""
@@ -40,7 +44,7 @@ let rec search_string_operator list_of_word =
     else
       search_string_operator sub_list_of_word
 
-
+(*Renvoie une liste de string*) 
 let rec construct_list_of_char string list_of_char = 
   if String.length string <> List.length list_of_char then
     let list_of_char_update = String.get string (List.length list_of_char) :: list_of_char in 
@@ -48,10 +52,12 @@ let rec construct_list_of_char string list_of_char =
   else
     list_of_char
     
+(*Renvoie une liste de string avec les éléments dans le bon ordre*)    
 let construct_list_of_char_clean string list_of_char = 
   let list = construct_list_of_char string list_of_char in
   List.rev list
 
+(*Renvoie une expression (en syntaxe abstraite)*)    
 let rec construct_expression list_of_word = 
   let first_word = List.hd list_of_word in
   (*print_string "testttt-3\n";*)
@@ -76,7 +82,8 @@ let rec construct_expression list_of_word =
 
   else  
     Var (first_word)
-  
+
+(*Renvoie une condition (en syntaxe abstraite)*)    
 let make_condition list_of_word =
   let list_1 = make_list_of_word_before_operator_clean list_of_word [] in
   let list_2 = make_list_of_word_after_operator list_of_word in
@@ -84,6 +91,7 @@ let make_condition list_of_word =
   let exp_2 = construct_expression list_2 in
   (exp_1, get_condition (search_string_operator list_of_word), exp_2);;    
 
+(*Renvoie une liste de block (en syntaxe abstraite)*)  
 let rec convert_file_line_list_to_block list_of_file_line block indentation = 
   match list_of_file_line with
   | [] -> block
@@ -140,6 +148,7 @@ let rec convert_file_line_list_to_block list_of_file_line block indentation =
         else
           convert_file_line_list_to_block sub_list_of_file_line block indentation
 
+(*Renvoie une liste de block (en syntaxe abstraite et dans le bon ordre)*)          
 let clean_convert_file_line_list_to_block list_of_file_line block indentation = 
   let list =  convert_file_line_list_to_block list_of_file_line block indentation in
   List.rev list
@@ -149,7 +158,7 @@ let clean_convert_file_line_list_to_block list_of_file_line block indentation =
 (*                Récupération des lignes dans le fichier              *)
 (***********************************************************************)
 
-(*Lis le fichier et récupère toute les lignes renvoie un type file_line*)
+(*Lis le fichier, recupere toutes les lignes et les renvoies*)
 let rec get_file_lines_from_files file position list_of_file_lines =
   try 
 
@@ -168,6 +177,7 @@ let rec get_file_lines_from_files file position list_of_file_lines =
 
   with End_of_file -> list_of_file_lines 
 
+(*Renvoie du code en syntaxe abstraite a partir d'un code en syntaxe concrete*)  
 let read_polish (filename:string) : program = 
   try
 

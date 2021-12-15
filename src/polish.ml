@@ -15,6 +15,7 @@ open Eval_polish
 (*                              Launcher                               *)
 (***********************************************************************)
 
+(*Affiche les differentes options*)
 let usage () =
   print_string "\n";
   print_string "Polish : analyse statique d'un mini-langage\n";
@@ -22,6 +23,7 @@ let usage () =
   print_string "-simpl : évalue le code polish\n";
   print_string "-simpl : simplifie le code polish\n"
 
+(*Execute une option en fonction de la ligne de commande*)
 let main () =
   match Sys.argv with
   | [|_;"-reprint";file|] -> print_polish (read_polish (String.trim file))
@@ -29,5 +31,5 @@ let main () =
   | [|_;"-simpl";file|] -> print_polish (simpl_polish (read_polish (String.trim file)))
   | _ -> usage ()
 
-(* lancement de ce main *)
+(* Lancement de ce main *)
 let () = main ()

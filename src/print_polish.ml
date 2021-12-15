@@ -9,6 +9,7 @@ open Utility_pf5
 (*                             print_polish                            *)
 (***********************************************************************)
 
+(*Transforme une expression en syntaxe abstraite en syntaxe concrete*)  
 let rec make_string_expression expr = 
   match expr with
     | Num (value) -> string_of_int value
@@ -19,6 +20,7 @@ let rec make_string_expression expr =
       let string_op = make_string_operator op in
       string_op ^ " " ^ string_1 ^ " " ^ string_2
 
+(*Transforme une condition en syntaxe abstraite en syntaxe concrete*)      
 let make_string_condition cond = 
   match cond with
   | (expr1, comp, expr2) -> 
@@ -27,6 +29,7 @@ let make_string_condition cond =
      let string_comp = make_string_comparation comp in 
      string_expr1 ^ string_comp ^ string_expr2
 
+(*Transforme du code en syntaxe abstraite en syntaxe concrete*)     
 let rec convert_block_to_string list_of_block indentation =
   match list_of_block with
     | [] -> []
@@ -81,12 +84,14 @@ let rec convert_block_to_string list_of_block indentation =
        
      ;;
 
+(*Fais des espaces*)
 let rec make_space indentation result = 
   if indentation <= 0 then
     result
   else
     make_space (indentation - 1) (" " ^ result);;
 
+(*Affiche le code ligne par ligne*)    
 let rec print_lines file_lines =
   match file_lines with 
     | [] -> print_string ""
@@ -96,6 +101,7 @@ let rec print_lines file_lines =
       print_string (pos ^ ". " ^ indentation ^ element.content ^ "\n");
       print_lines sub_file_lines;;
 
+(*Pour afficher le code polish*)      
 let print_polish (p:program) : unit = 
   let file_lines = convert_block_to_string p 0 in
   print_string "\n";

@@ -11,7 +11,8 @@ open Simpl_polish
 (***********************************************************************)
 
 
-    
+(*Evalue le code en syntaxe en abstraite en fonction
+des valeurs contenu dans les variables*)    
 let rec eval_expr expr map = 
   match expr with
   | Num (value) -> 
@@ -113,6 +114,7 @@ let rec eval_block list_of_block map =
         print_string (string_of_int position ^ ". " ^ "While : " ^ error_message ^ "\n");  
         exit 1
 
+(*Permet d evaluer un code en syntaxe abstraite*)        
 let eval_polish (p:program) : unit = 
   let map = NameTable.empty in 
   print_string "\n"; 
