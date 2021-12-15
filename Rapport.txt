@@ -64,12 +64,7 @@ Module Types :
 Module Polish : 
 
     - Description : Renvoie le résultat d'une commande
-    - Utilité : Utile pour récupérer le résultat   
-
-Module Polish : 
-
-    - Description : Renvoie le résultat d'une commande
-    - Utilité : Utile pour récupérer le résultat 
+    - Utilité : Utile pour récupérer le résultat
 
 Module Read_polish : 
 
