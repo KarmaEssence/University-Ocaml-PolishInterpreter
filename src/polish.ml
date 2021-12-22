@@ -8,6 +8,7 @@ open Print_polish
 open Read_polish
 open Simpl_polish
 open Eval_polish
+open Vars_polish
 
 (*****************************************************************************)     
 
@@ -29,6 +30,7 @@ let main () =
   | [|_;"-reprint";file|] -> print_polish (read_polish (String.trim file))
   | [|_;"-eval";file|] -> eval_polish (simpl_polish (read_polish (String.trim file)))
   | [|_;"-simpl";file|] -> print_polish (simpl_polish (read_polish (String.trim file)))
+  | [|_;"-vars";file|] -> vars_polish (read_polish (String.trim file))
   | _ -> usage ()
 
 (* Lancement de ce main *)
