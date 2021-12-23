@@ -31,6 +31,7 @@ let main () =
   | [|_;"-eval";file|] -> eval_polish (simpl_polish (read_polish (String.trim file)))
   | [|_;"-simpl";file|] -> print_polish (simpl_polish (read_polish (String.trim file)))
   | [|_;"-vars";file|] -> vars_polish (read_polish (String.trim file))
+  | [|_;"-sign";file|] -> sign_polish (simpl_polish(read_polish (String.trim file)))
   | _ -> usage ()
 
 (* Lancement de ce main *)

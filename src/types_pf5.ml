@@ -36,6 +36,12 @@ type instr =
   | While of cond * block
 and block = (position * instr) list
 
+type sign =
+| Neg
+| Zero
+| Pos
+| Error
+
 (** Un programme Polish est un bloc d'instructions *)
 type program = block
 type file_line = { position : position ; indentation : int; content : string}
