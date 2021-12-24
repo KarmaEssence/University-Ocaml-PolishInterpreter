@@ -16,57 +16,65 @@ let rec print_sign list acc =
   |[] -> acc
   |x::reste_list -> 
     match x with
-    | Neg -> type_sign reste_list (acc ^ "-")
-    | Zero -> type_sign reste_list (acc ^ "0")
-    | Pos -> type_sign reste_list (acc ^ "+")
-    | Error -> type_sign reste_list (acc ^ "!")
+    | Neg -> print_sign reste_list (acc ^ "-")
+    | Zero -> print_sign reste_list (acc ^ "0")
+    | Pos -> print_sign reste_list (acc ^ "+")
+    | Error -> print_sign reste_list (acc ^ "!")
 
-let rec op_sign expr1 op expr2 =
+let op_sign expr1 op expr2 =
   match expr1, op, expr2 with
-  |Zero, Add, Zero
-  |Zero, Sub, Zero
-  |Pos, Mul, Zero
-  |Neg, Mul, Zero
-  |Zero, Div, Pos
-  |Zero, Div, Neg
-  |Zero, Mul, Zero -> [Zero]
+  |Zero, (Add|Sub|Mul), Zero
+  |Zero, Mul, (Pos|Neg)
+  |(Pos|Neg), Mul, Zero
+  |Zero, Div, (Pos|Neg)-> [Zero]
   |Pos, Add, Zero
   |Zero, Add, Pos
   |Pos, Mul, Pos
   |Pos, Div, Pos
   |Neg, Mul, Neg
   |Neg, Div, Neg
-  |Pos, Add, Pos -> [Pos]
-  |Neg, Add, Neg
   |Zero, Sub, Neg
+  |Pos, Sub, (Neg|Zero)
+  |Pos, Add, Pos -> [Pos]
+  |Zero, Add, Neg
+  |Neg, Add, (Zero|Neg)
+  |Zero, Sub, Pos
   |Neg, Mul, Pos
   |Pos, Mul, Neg
   |Neg, Div, Pos
   |Pos, Div, Neg
+  |Neg, Sub, Pos
   |Neg, Sub, Zero -> [Neg]
+  |Pos, Sub, Pos
+  |Neg, Add, Pos 
   |Pos, Add, Neg
-  |Pos, Mod, Pos
-  |Pos, Mod, Neg
-  |Neg, Mod, Pos
-  |Neg, Mod, Neg
-  |Zero, Mod, Pos
-  |Zero, Mod, Neg
-  |Pos, Mod, Zero
-  |Neg, Mod, Zero
-  |Zero, Mod, Zero
-  |Neg, Add, Pos -> [Neg, Zero, Pos]
-  |Zero, Div, Zero -> [Error]
+  |Neg, Sub, Neg
+  |(Pos|Neg), Mod, (Pos|Neg)
+  |Zero, Mod, (Pos|Neg)-> [Neg; Zero; Pos]
+  |_, _, Error
+  |Error, _, _
+  |_, (Div|Mod), Zero -> [Error]
 
-let rec expr_sign expr =
+let rec expr_sign expr list =
   match expr with
-  |Num (value) -> if value < 0 then [Neg]  
-  else if value > 0 then [Pos]
-  else [Zero]
+  |Num (value) -> if value < 0 then list@[Neg]  
+  else if value > 0 then list@[Pos]
+  else list@[Zero]
   |Var(name) -> []
   |Op (op, expr_1, expr_2) -> 
-    let expr_1_res = expr_sign expr_1 in
-    let expr_2_res = expr_sign expr_2 in
+    let expr_1_res = expr_sign expr_1 list in
+    let expr_2_res = expr_sign expr_2 list in
     op_sign expr_1_res op expr_2_res
+    
+let cond_sign cond map boolean =
+  match cond with
+  |(expr_1, comp, expr_2) -> 
+    if boolean then 
+      let new_map = NameTable.add "" (expr_sign expr_1) map in
+      new_map
+    else
+      let new_map = NameTable.add "" (expr_sign expr_2) map in
+      new_map    
 
 let print_line key value =
   print_string (key ^ " " ^ (print_sign value 0))
@@ -91,11 +99,27 @@ let rec sign_block list_of_block map =
       sign_block sub_list_of_block map
   
     | If (cond, block_1, block_2) ->
-      
+      let cond_res = eval_condition cond map in
+      if choose_simpl_block cond_res then
+        let new_map = sign_block block_1 map in
+          cond_sign cond map (choose_simpl_block cond_res);
+          sign_block sub_list_of_block new_map
         
-  
+        else 
+          let new_map = sign_block block_2 map in
+          cond_sign cond map (choose_simpl_block cond_res);
+          sign_block sub_list_of_block new_map
+      
     | While (cond, block) ->
-  
+      let cond_res = eval_condition cond map in
+      if (choose_simpl_block cond_re) = false then
+        let new_map = sign_block block_1 map in
+        sign_block sub_list_of_block map
+        
+        else 
+          let new_map = sign_block block map in
+          cond_sign cond map (choose_simpl_block cond_res);
+          sign_block sub_list_of_block new_map
       
 
 (*Permet d evaluer un code en syntaxe abstraite*)        

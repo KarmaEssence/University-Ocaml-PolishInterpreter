@@ -9,6 +9,7 @@ open Read_polish
 open Simpl_polish
 open Eval_polish
 open Vars_polish
+open Sign_polish
 
 (*****************************************************************************)     
 
