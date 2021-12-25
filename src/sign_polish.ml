@@ -4,6 +4,7 @@ open Types_pf5
 open Utility_pf5
 open Simpl_polish
 open Vars_polish
+open Eval_polish
 
 (*****************************************************************************)
 
@@ -21,50 +22,106 @@ let rec print_sign list acc =
     | Pos -> print_sign reste_list (acc ^ "+")
     | Error -> print_sign reste_list (acc ^ "!")
 
-let op_sign expr1 op expr2 =
-  match expr1, op, expr2 with
-  |Zero, (Add|Sub|Mul), Zero
-  |Zero, Mul, (Pos|Neg)
-  |(Pos|Neg), Mul, Zero
-  |Zero, Div, (Pos|Neg)-> [Zero]
-  |Pos, Add, Zero
-  |Zero, Add, Pos
-  |Pos, Mul, Pos
-  |Pos, Div, Pos
-  |Neg, Mul, Neg
-  |Neg, Div, Neg
-  |Zero, Sub, Neg
-  |Pos, Sub, (Neg|Zero)
-  |Pos, Add, Pos -> [Pos]
-  |Zero, Add, Neg
-  |Neg, Add, (Zero|Neg)
-  |Zero, Sub, Pos
-  |Neg, Mul, Pos
-  |Pos, Mul, Neg
-  |Neg, Div, Pos
-  |Pos, Div, Neg
-  |Neg, Sub, Pos
-  |Neg, Sub, Zero -> [Neg]
-  |Pos, Sub, Pos
-  |Neg, Add, Pos 
-  |Pos, Add, Neg
-  |Neg, Sub, Neg
-  |(Pos|Neg), Mod, (Pos|Neg)
-  |Zero, Mod, (Pos|Neg)-> [Neg; Zero; Pos]
-  |_, _, Error
-  |Error, _, _
-  |_, (Div|Mod), Zero -> [Error]
+let op_sign_mod expr1 expr2 = 
+  match expr1, expr2 with
+  | Zero, (Pos|Neg) -> [Zero]
+  | Pos, Pos -> [Zero; Pos]
+  | Neg, Neg -> [Neg; Zero]
+  | Pos, Neg
+  | Neg, Pos -> [Neg; Zero; Pos]
+  | (Pos|Neg|Zero), Zero
+  | Error, _
+  | _, Error -> [Error]     
 
-let rec expr_sign expr list =
+let op_sign_div expr1 expr2 = 
+  match expr1, expr2 with
+  | Pos, Pos 
+  | Neg, Neg -> [Pos]
+  | Neg, Pos
+  | Pos, Neg -> [Neg]
+  | Zero, (Pos|Neg) -> [Zero]
+  | _, Zero
+  | Error, _
+  | _, Error -> [Error]
+
+let op_sign_mul expr1 expr2 = 
+  match expr1, expr2 with
+  | Pos, Pos
+  | Neg, Neg -> [Pos]
+  | Pos, Neg
+  | Neg, Pos -> [Neg]
+  | Zero, (Zero | Pos | Neg) 
+  | (Pos | Neg), Zero -> [Zero]
+  | Error, _
+  | _, Error -> [Error]  
+  
+let op_sign_sub expr1 expr2 = 
+  match expr1, expr2 with
+  | Neg, Neg
+  | Pos, Pos -> [Neg; Zero; Neg]
+  | Neg, Pos
+  | Zero, Pos 
+  | Neg, Zero -> [Neg]
+  | Pos, Neg
+  | Zero, Neg
+  | Pos, Zero -> [Pos]
+  | Zero, Zero -> [Zero]
+  | Error, _
+  | _, Error -> [Error]  
+
+let op_sign_add expr1 expr2 = 
+  match expr1, expr2 with
+  | Pos, Pos 
+  | Pos, Zero
+  | Zero, Pos -> [Pos]
+  | Neg, Neg 
+  | Zero, Neg
+  | Neg, Zero -> [Neg]
+  | Zero, Zero -> [Zero]
+  | Pos, Neg
+  | Neg, Pos -> [Neg; Zero; Pos]
+  | Error, _
+  | _, Error -> [Error]  
+
+let op_sign expr1 op expr2 =
+  match op with
+  | Add -> op_sign_add expr1 expr2
+  | Sub -> op_sign_sub expr1 expr2
+  | Mul -> op_sign_mul expr1 expr2
+  | Div -> op_sign_div expr1 expr2
+  | Mod -> op_sign_mod expr1 expr2
+
+let rec avoid_duplicate_sign_type_in_list list list_res =
+  match list with 
+  | [] -> list_res
+  | x :: sub_list ->
+    if List.mem x list_res then
+        avoid_duplicate_sign_type_in_list sub_list list_res
+    else 
+        avoid_duplicate_sign_type_in_list sub_list (x::list_res)
+
+let rec make_sign_operation list1 list2 op list_res =  
+  match list1 with
+  |[] -> list_res
+  |x:: sub_list_1 -> 
+    match list2 with
+    |[] -> list_res
+    |y:: sub_list_2 -> 
+      let res = op_sign x op y in
+      let new_res = avoid_duplicate_sign_type_in_list res list_res in
+      make_sign_operation sub_list_1 sub_list_2 op new_res
+
+let rec expr_sign expr =
   match expr with
-  |Num (value) -> if value < 0 then list@[Neg]  
-  else if value > 0 then list@[Pos]
-  else list@[Zero]
+  |Num (value) -> 
+    if value < 0 then [Neg]  
+    else if value > 0 then [Pos]
+    else [Zero]
   |Var(name) -> []
   |Op (op, expr_1, expr_2) -> 
-    let expr_1_res = expr_sign expr_1 list in
-    let expr_2_res = expr_sign expr_2 list in
-    op_sign expr_1_res op expr_2_res
+    let expr_1_res = expr_sign expr_1 in
+    let expr_2_res = expr_sign expr_2 in
+    make_sign_operation expr_1_res expr_2_res op []
     
 let cond_sign cond map boolean =
   match cond with
@@ -77,7 +134,7 @@ let cond_sign cond map boolean =
       new_map    
 
 let print_line key value =
-  print_string (key ^ " " ^ (print_sign value 0))
+  print_string (key ^ " " ^ (print_sign value "0"))
 
 let find_map map =
   NameTable.iter print_line map
