@@ -12,16 +12,6 @@ open Eval_polish
 (*                             sign_polish                             *)
 (***********************************************************************)
 
-let rec print_sign list acc = 
-  match list with
-  |[] -> acc
-  |x::reste_list -> 
-    match x with
-    | Neg -> print_sign reste_list (acc ^ "-")
-    | Zero -> print_sign reste_list (acc ^ "0")
-    | Pos -> print_sign reste_list (acc ^ "+")
-    | Error -> print_sign reste_list (acc ^ "!")
-
 let op_sign_mod expr1 expr2 = 
   match expr1, expr2 with
   | Zero, (Pos|Neg) -> [Zero]
@@ -91,6 +81,34 @@ let op_sign expr1 op expr2 =
   | Div -> op_sign_div expr1 expr2
   | Mod -> op_sign_mod expr1 expr2
 
+let comp_sign_gt expr1 expr2 =
+  match expr1, expr2 with
+  |Pos, (Neg|Zero)
+  |Zero, Neg -> true
+  |_, _ -> false  
+
+let comp_sign_lt expr1 expr2 =
+  match expr1, expr2 with
+  |(Neg|Zero), Pos
+  |Neg, Zero -> true
+  |_, _ -> false  
+
+let comp_sign_eq expr1 expr2 =
+  match expr1, expr2 with
+  |Pos, Pos
+  |Neg, Neg
+  |Zero, Zero -> true
+  |_, _ -> false   
+
+let comp_sign expr1 comp expr2 =
+  match comp with
+  | Eq -> comp_sign_eq expr1 expr2
+  | Ne -> not(comp_sign_eq expr1 expr2)
+  | Lt -> comp_sign_lt expr1 expr2
+  | Le -> (comp_sign_eq expr1 expr2) || (comp_sign_lt expr1 expr2)
+  | Gt -> comp_sign_gt expr1 expr2
+  | Ge -> (comp_sign_eq expr1 expr2) || (comp_sign_gt expr1 expr2)
+
 let rec avoid_duplicate_sign_type_in_list list list_res =
   match list with 
   | [] -> list_res
@@ -109,32 +127,72 @@ let rec make_sign_operation list1 list2 op list_res =
     |y:: sub_list_2 -> 
       let res = op_sign x op y in
       let new_res = avoid_duplicate_sign_type_in_list res list_res in
-      make_sign_operation sub_list_1 sub_list_2 op new_res
+      make_sign_operation sub_list_1 sub_list_2 op new_res    
 
-let rec expr_sign expr =
+let rec expr_sign expr map =
   match expr with
   |Num (value) -> 
     if value < 0 then [Neg]  
     else if value > 0 then [Pos]
     else [Zero]
-  |Var(name) -> []
+  |Var(name) -> 
+    if NameTable.mem name map then
+      NameTable.find name map
+    else []
   |Op (op, expr_1, expr_2) -> 
-    let expr_1_res = expr_sign expr_1 in
-    let expr_2_res = expr_sign expr_2 in
+    let expr_1_res = expr_sign expr_1 map in
+    let expr_2_res = expr_sign expr_2 map in
     make_sign_operation expr_1_res expr_2_res op []
+
+let rec make_sign_comparaison list1 list2 comp =
+  match list1 with
+  |[] -> true
+  |x:: sub_list_1 -> 
+    match list2 with
+    |[] -> true
+    |y:: sub_list_2 -> 
+      if comp_sign x comp y then
+        make_sign_comparaison sub_list_1 sub_list_2 comp
+      else 
+        false   
     
-let cond_sign cond map boolean =
+let apply_condition_sign_type cond map =
   match cond with
-  |(expr_1, comp, expr_2) -> 
-    if boolean then 
-      let new_map = NameTable.add "" (expr_sign expr_1) map in
-      new_map
-    else
-      let new_map = NameTable.add "" (expr_sign expr_2) map in
-      new_map    
+  | (expr_1, comp, expr_2) ->
+    let expr_1_res = expr_sign expr_1 map in
+    let expr_2_res = expr_sign expr_2 map in
+    make_sign_comparaison expr_1_res expr_2_res comp
+
+let has_error_condition_sign_type cond map =
+  match cond with
+  | (expr_1, comp, expr_2) ->
+    let expr_1_res = expr_sign expr_1 map in
+    let expr_2_res = expr_sign expr_2 map in
+    if List.mem Error expr_1_res || List.mem Error expr_2_res then
+      true
+    else false    
+
+let can_apply_condition_sign_type cond map =
+  match cond with
+  | (expr_1, comp, expr_2) ->
+    let expr_1_res = expr_sign expr_1 map in
+    let expr_2_res = expr_sign expr_2 map in
+    if (List.length expr_1_res) > 2 || (List.length expr_1_res) > 2 || List.mem Error expr_1_res || List.mem Error expr_2_res then
+     false
+    else true
+
+let rec print_sign list acc = 
+  match list with
+  |[] -> acc
+  |x::reste_list -> 
+    match x with
+    | Neg -> print_sign reste_list (acc ^ "-")
+    | Zero -> print_sign reste_list (acc ^ "0")
+    | Pos -> print_sign reste_list (acc ^ "+")
+    | Error -> print_sign reste_list (acc ^ "!")    
 
 let print_line key value =
-  print_string (key ^ " " ^ (print_sign value "0"))
+  print_string (key ^ " " ^ (print_sign value ""))
 
 let find_map map =
   NameTable.iter print_line map
@@ -150,33 +208,30 @@ let rec sign_block list_of_block map =
       sign_block sub_list_of_block new_map
       
     | Read (name) ->
-      sign_block sub_list_of_block map
+      let new_map = NameTable.add name [Neg; Zero; Pos] map in
+      sign_block sub_list_of_block new_map
   
     | Print (expr) ->
       sign_block sub_list_of_block map
   
     | If (cond, block_1, block_2) ->
-      let cond_res = eval_condition cond map in
-      if choose_simpl_block cond_res then
-        let new_map = sign_block block_1 map in
-          cond_sign cond map (choose_simpl_block cond_res);
+      if can_apply_condition_sign_type cond map then
+        if apply_condition_sign_type cond map then
+          let new_map = sign_block block_1 map in
           sign_block sub_list_of_block new_map
-        
-        else 
+        else
           let new_map = sign_block block_2 map in
-          cond_sign cond map (choose_simpl_block cond_res);
           sign_block sub_list_of_block new_map
+      else  
+        if has_error_condition_sign_type cond map then 
+          sign_block sub_list_of_block map
+        else
+          let new_map = sign_block block_1 map in
+          let new_map2 = sign_block block_2 new_map in
+          sign_block sub_list_of_block new_map2
       
     | While (cond, block) ->
-      let cond_res = eval_condition cond map in
-      if (choose_simpl_block cond_re) = false then
-        let new_map = sign_block block_1 map in
-        sign_block sub_list_of_block map
-        
-        else 
-          let new_map = sign_block block map in
-          cond_sign cond map (choose_simpl_block cond_res);
-          sign_block sub_list_of_block new_map
+      sign_block sub_list_of_block map
       
 
 (*Permet d evaluer un code en syntaxe abstraite*)        
