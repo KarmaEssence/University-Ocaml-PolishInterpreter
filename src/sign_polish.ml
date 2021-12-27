@@ -201,7 +201,7 @@ let rec expr_sign expr map =
     let list_res = make_sign_operation expr_1_res expr_2_res op [] in
     quicksort list_res
 
-(*let rec make_sign_comparaison list1 list2 comp =
+let rec make_sign_comparaison list1 list2 comp =
   match list1 with
   |[] -> true
   |x:: sub_list_1 -> 
@@ -236,7 +236,7 @@ let can_apply_condition_sign_type cond map =
     let expr_2_res = expr_sign expr_2 map in
     if (List.length expr_1_res) > 2 || (List.length expr_1_res) > 2 || List.mem Error expr_1_res || List.mem Error expr_2_res then
      false
-    else true*)
+    else true
 
 let rec print_sign list acc = 
   match list with
@@ -262,7 +262,7 @@ let print_error key value =
   else 
     print_string "" 
 
-let element_contains_error key value = List.mem Error value
+let element_contains_error key value = List.length value == 0
 
 let find_map map =
   NameTable.iter print_line map;
@@ -280,12 +280,11 @@ let rec sign_block list_of_block map =
   
     match instruction with
     | Set (name, expr) ->
-      (*let get_sign_list = expr_sign expr map in*)
       let new_map = NameTable.add name (expr_sign expr map) map in
       
       if not (NameTable.exists element_contains_error map) &&
          List.mem Error (NameTable.find name new_map) then
-          
+
         let new_map_with_error = NameTable.add (string_of_int position) [] new_map in
         sign_block sub_list_of_block new_map_with_error
 
@@ -300,7 +299,7 @@ let rec sign_block list_of_block map =
       sign_block sub_list_of_block map
   
     | If (cond, block_1, block_2) ->
-      (*if can_apply_condition_sign_type cond map then
+      if can_apply_condition_sign_type cond map then
         if apply_condition_sign_type cond map then
           let new_map = sign_block block_1 map in
           sign_block sub_list_of_block new_map
@@ -310,14 +309,16 @@ let rec sign_block list_of_block map =
 
           
       else  
-        if has_error_condition_sign_type cond map then 
-          sign_block sub_list_of_block map
+        if not (NameTable.exists element_contains_error map) && has_error_condition_sign_type cond map then 
+          let map_with_error = NameTable.add (string_of_int position) [] map in
+          print_string "je suis ici\n";
+          sign_block sub_list_of_block map_with_error
+          
         else
           let new_map = sign_block block_1 map in
           let new_map2 = sign_block block_2 new_map in
-          sign_block sub_list_of_block new_map2*)
-    
-      sign_block sub_list_of_block map
+          sign_block sub_list_of_block new_map2
+  
     | While (cond, block) ->
       sign_block sub_list_of_block map
       
