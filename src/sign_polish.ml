@@ -135,47 +135,6 @@ let is_sign_inferior_of x y =
   | Error, Error -> true
   | _, _ -> false 
 
-(*let rec clean_list_of_sign list list_res = 
-  match list with
-  | [] -> list_res
-  | x :: sub_list ->
-    
-    (*let rec clean_sub_list_of_sign x list_2 list_res =
-      match list_2 with
-      |[] -> x :: list_res
-      |y:: sub_list_2 -> 
-
-        if is_sign_inferior_of x y then
-          let add_element = List.rev (x :: List.rev list_res) in
-          add_element @ list_2
-        
-        else   
-          clean_sub_list_of_sign x sub_list_2 list_res
-
-    in  *)
-
-    let rec clean_sub_list_of_sign x list_2 list_res already_asign =
-      match list_2 with
-      |[] -> list_res
-      |y:: sub_list_2 -> 
-
-        if is_sign_inferior_of x y && not already_asign then
-          let add_element = List.rev (x :: List.rev list_res) in
-          (*let add_element_2 = List.rev (y :: List.rev add_element) in*)
-          clean_sub_list_of_sign x list_2 add_element true
-
-        else   
-          let add_element = List.rev (y :: List.rev list_res) in
-          clean_sub_list_of_sign x sub_list_2 add_element false
-
-    in  
-
-    let list_new_res = clean_sub_list_of_sign x list_res [] false in
-    if List.length list_new_res = 0 then
-      clean_list_of_sign sub_list (x :: list_new_res)
-    else
-      clean_list_of_sign sub_list list_new_res*)
-
   let rec quicksort list = 
     match list with
     | [] -> []
@@ -293,8 +252,18 @@ let print_line key value =
   print_string (key ^ " " ^ (print_sign value ""));
   print_string "\n"
 
+let print_state key value =
+  if List.mem Error value then
+    let () = print_string ("divbyzero ") in
+    print_string "\n"
+  else 
+    print_string "" 
+    
+
 let find_map map =
-  NameTable.iter print_line map
+  NameTable.iter print_line map;
+  print_string "\n"; 
+  NameTable.iter print_state map
   
 let rec sign_block list_of_block map = 
   match list_of_block with
