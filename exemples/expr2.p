@@ -1,0 +1,19 @@
+READ e
+res := - 0 e
+res1 := / 0 0 
+res2 := + e 10
+res3 := + 0 e
+res4 := - e 0
+res5 := - 0 e
+res6 := * e 0
+res7 := * 0 e
+res8 := / e 0
+res9 := / 0 e
+res10 := % e 0
+res11 := % 0 e
+res12 := * e 1
+res13 := * 1 e
+res14 := / e 1
+res15 := / 1 e
+res16 := % e 1
+res17 := % 4 e
