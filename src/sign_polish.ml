@@ -249,21 +249,29 @@ let rec print_sign list acc =
     | Error -> print_sign reste_list (acc ^ "!")    
 
 let print_line key value =
-  print_string (key ^ " " ^ (print_sign value ""));
-  print_string "\n"
-
-let print_state key value =
-  if List.mem Error value then
-    let () = print_string ("divbyzero ") in
+  if List.length value > 0 then
+    let () = print_string (key ^ " " ^ (print_sign value "")) in
     print_string "\n"
   else 
+    print_string ""
+
+let print_error key value =
+  if List.length value = 0 then
+    let () = print_string ("divbyzero " ^ key) in
+    print_string "\n";
+  else 
     print_string "" 
-    
+
+let element_contains_error key value = List.mem Error value
 
 let find_map map =
   NameTable.iter print_line map;
   print_string "\n"; 
-  NameTable.iter print_state map
+  if NameTable.exists element_contains_error map then
+    let () = NameTable.iter print_error map in
+    print_string "\n"
+  else
+    print_string "safe\n" 
   
 let rec sign_block list_of_block map = 
   match list_of_block with
@@ -274,7 +282,15 @@ let rec sign_block list_of_block map =
     | Set (name, expr) ->
       (*let get_sign_list = expr_sign expr map in*)
       let new_map = NameTable.add name (expr_sign expr map) map in
-      sign_block sub_list_of_block new_map
+      
+      if not (NameTable.exists element_contains_error map) &&
+         List.mem Error (NameTable.find name new_map) then
+          
+        let new_map_with_error = NameTable.add (string_of_int position) [] new_map in
+        sign_block sub_list_of_block new_map_with_error
+
+      else   
+        sign_block sub_list_of_block new_map
       
     | Read (name) ->
       let new_map = NameTable.add name [Neg; Zero; Pos] map in

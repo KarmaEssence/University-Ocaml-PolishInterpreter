@@ -1,7 +1,7 @@
 READ e
 res := - 0 e
-res1 := / 0 0 
-res2 := + e 10
+gg := / 0 0 
+beaugosse := + e 10
 res3 := + 0 e
 res4 := - e 0
 res5 := - 0 e
