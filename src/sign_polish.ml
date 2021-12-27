@@ -124,6 +124,90 @@ let rec avoid_duplicate_sign_type_in_list list list_res =
     else 
         avoid_duplicate_sign_type_in_list sub_list (x::list_res)
 
+let is_sign_inferior_of x y = 
+  match x, y with
+  | Neg, (Zero | Pos | Error) 
+  | Zero, (Pos | Error) 
+  | Pos, (Error)
+  | Neg, Neg 
+  | Zero, Zero 
+  | Pos, Pos  
+  | Error, Error -> true
+  | _, _ -> false 
+
+(*let rec clean_list_of_sign list list_res = 
+  match list with
+  | [] -> list_res
+  | x :: sub_list ->
+    
+    (*let rec clean_sub_list_of_sign x list_2 list_res =
+      match list_2 with
+      |[] -> x :: list_res
+      |y:: sub_list_2 -> 
+
+        if is_sign_inferior_of x y then
+          let add_element = List.rev (x :: List.rev list_res) in
+          add_element @ list_2
+        
+        else   
+          clean_sub_list_of_sign x sub_list_2 list_res
+
+    in  *)
+
+    let rec clean_sub_list_of_sign x list_2 list_res already_asign =
+      match list_2 with
+      |[] -> list_res
+      |y:: sub_list_2 -> 
+
+        if is_sign_inferior_of x y && not already_asign then
+          let add_element = List.rev (x :: List.rev list_res) in
+          (*let add_element_2 = List.rev (y :: List.rev add_element) in*)
+          clean_sub_list_of_sign x list_2 add_element true
+
+        else   
+          let add_element = List.rev (y :: List.rev list_res) in
+          clean_sub_list_of_sign x sub_list_2 add_element false
+
+    in  
+
+    let list_new_res = clean_sub_list_of_sign x list_res [] false in
+    if List.length list_new_res = 0 then
+      clean_list_of_sign sub_list (x :: list_new_res)
+    else
+      clean_list_of_sign sub_list list_new_res*)
+
+  let rec quicksort list = 
+    match list with
+    | [] -> []
+    | [element] -> [element]
+    | _ ->
+      let list_temp = List.tl list in
+      let first_element = List.nth list 0 in 
+      let rec copy word list first_element = 
+      if word = "inf" then 
+        match list with
+        | [] -> [] 
+        | element :: sub_list -> 
+          if is_sign_inferior_of element first_element then 
+            [element] @ copy word sub_list first_element 
+
+          else copy word sub_list first_element
+      
+      else 
+        match list with
+        | [] -> [] 
+        | element :: sub_list -> 
+          if not (is_sign_inferior_of element first_element) then 
+            [element] @ copy word sub_list first_element
+                    
+          else copy word sub_list first_element
+
+      in 
+      let left_sort = quicksort (copy "inf" list_temp first_element) in
+      let right_sort = quicksort (copy "sup" list_temp first_element)  in
+      left_sort @ [first_element] @ right_sort    
+      
+      
 let rec make_sign_operation list1 list2 op list_res =  
   match list1 with
   |[] -> list_res
@@ -140,7 +224,7 @@ let rec make_sign_operation list1 list2 op list_res =
 
     in 
     let list_new_res = make_sub_sign_operation x list2 op list_res in
-    make_sign_operation sub_list_1 list2 op list_new_res  
+    make_sign_operation sub_list_1 list2 op list_new_res
 
 let rec expr_sign expr map =
   match expr with
@@ -155,7 +239,8 @@ let rec expr_sign expr map =
   |Op (op, expr_1, expr_2) -> 
     let expr_1_res = expr_sign expr_1 map in
     let expr_2_res = expr_sign expr_2 map in
-    make_sign_operation expr_1_res expr_2_res op []
+    let list_res = make_sign_operation expr_1_res expr_2_res op [] in
+    quicksort list_res
 
 (*let rec make_sign_comparaison list1 list2 comp =
   match list1 with
