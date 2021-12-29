@@ -107,7 +107,9 @@ let make_simpl_expr op expr_1 expr_2 =
     if is_Num expr_1 && is_Num expr_2 then
       make_simpl_operation op expr_1 expr_2
 
-    else  
+    else if (op = Sub || op = Div) && expr_1 = expr_2 then
+      Num (0)  
+    else
       Op(op, expr_1, expr_2)
 
 (*Simplifie l expression*)
