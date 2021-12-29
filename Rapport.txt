@@ -31,6 +31,9 @@ Fonctionnalités du rendu 1 :
 Fonctionnalités du rendu 2 :  
 
     - "simpl_polish" : Prend du code abstrait en entré et renvoie une version simplifié de ce programme
+    - "vars_polish" : calcul statique des variables risquant d’être accédées avant d’être écrites
+    - "sign_polish" : analyse statique du signe possible des variables lors du déroulement
+    du programme, et application à la détermination du risque de division par zéro
     
 (***********************************************************************)
 (*                           3. Compilation et exécution               *)                       
@@ -49,6 +52,8 @@ Execution du projet :
     ./run -reprint <Nom du fichier>
     ./run -eval <Nom du fichier>
     ./run -simpl <Nom du fichier>
+    ./run -var <Nom du fichier>
+    ./run -sign <Nom du fichier>
 
     (Plus de détails sur les options dans le fichier polish.ml)
 
@@ -61,6 +66,12 @@ Module Types :
     - Description : Pour stocker les données d'un code polish
     - Utilité : Tous les modules en ont besoin
 
+Module Utility_pf5 : 
+
+    - Description : Stocke des fonctions réutilisable par d'autre
+        module 
+    - Utilité : Tous les modules en ont besoin    
+
 Module Polish : 
 
     - Description : Renvoie le résultat d'une commande
@@ -69,7 +80,8 @@ Module Polish :
 Module Read_polish : 
 
     - Description : Transformation de la syntaxe concrète (Polish) en syntaxe abstraite (ocaml)
-    - Utilité : Utile pour les modules print_polish, eval_polish, simpl_polish           
+    - Utilité : Utile pour les modules print_polish, eval_polish, simpl_polish,
+                vars_polish, sign_polish           
      
 Module Print_polish : 
 
@@ -84,8 +96,19 @@ Module Eval_polish :
 Module Simpl_polish : 
 
     - Description : Simplification du code en syntaxe abstraite (ocaml)
-    - Utilité : Ne dépend d'aucun module                 
+    - Utilité : Ne dépend d'aucun module      
+
+Module Vars_polish : 
+
+    - Description : Calcul statique des variables risquant d’être
+     accédées avant d’être écrites
+    - Utilité : Ne dépend d'aucun module 
                      
+Module Sign_polish : 
+
+    - Description : analyse statique du signe possible des variables lors du déroulement
+    du programme, et application à la détermination du risque de division par zéro
+    - Utilité : Ne dépend d'aucun module                      
 (***********************************************************************)
 (*                           5. Organisation du travail                *)                       
 (***********************************************************************) 
@@ -104,8 +127,13 @@ Du 8 décembre au 15 décembre :
     - Mise en place du eval polish à l'aide de simpl polish (par Kévin)
     - Correction du code, creation du fichier Rapport.txt (par Léo)
 
+Du 24 décembre au 31 décembre :   
+
+    - Mise en place du vars_polish (par Léo)
+    - Mise en place du sign_polish (par Kévin)
+
 (***********************************************************************)
 (*                           6. Misc                                   *)                       
 (***********************************************************************)    
 
-Pourrez-vous nous signaler des erreurs sur les options déjà présentes ?
+Pas de commentaire, ni de question
