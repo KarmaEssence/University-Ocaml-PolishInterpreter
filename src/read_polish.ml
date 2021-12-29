@@ -44,19 +44,6 @@ let rec search_string_operator list_of_word =
     else
       search_string_operator sub_list_of_word
 
-(*Renvoie une liste de string*) 
-let rec construct_list_of_char string list_of_char = 
-  if String.length string <> List.length list_of_char then
-    let list_of_char_update = String.get string (List.length list_of_char) :: list_of_char in 
-    construct_list_of_char string list_of_char_update
-  else
-    list_of_char
-    
-(*Renvoie une liste de string avec les éléments dans le bon ordre*)    
-let construct_list_of_char_clean string list_of_char = 
-  let list = construct_list_of_char string list_of_char in
-  List.rev list
-
 (*Renvoie une expression (en syntaxe abstraite)*)    
 let rec construct_expression list_of_word = 
   let first_word = List.hd list_of_word in
@@ -65,9 +52,11 @@ let rec construct_expression list_of_word =
   (*print_string "testttt-4\n";*)
 
   if is_operator first_word then
-
-    let sub_string_1 = skip_element list_of_word 1 in
-    let sub_string_2 = skip_element list_of_word 2 in
+ 
+    let sub_string_1 = get_first_expr_list (skip_element list_of_word 1) in
+    let sub_string_2 = skip_element list_of_word ((List.length sub_string_1) + 1) in
+    (*let sub_string_1 = skip_element list_of_word 1 in
+    let sub_string_2 = skip_element list_of_word 2 in*)
     let exp_1 = construct_expression sub_string_1 in
     let exp_2 = construct_expression sub_string_2 in
     Op (get_operator first_word, exp_1, exp_2)

@@ -331,11 +331,8 @@ let rec sign_block list_of_block map =
 
         let new_map = sign_block block map in
         if NameTable.equal compare_list map new_map then
-          let () = print_string "random.org\n" in
-          
           sign_block sub_list_of_block map
         else 
-          let () = print_string "je suis la \n" in
           sign_block list_of_block new_map
 
       else  

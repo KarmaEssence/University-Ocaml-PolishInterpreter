@@ -8,94 +8,7 @@ open Types_pf5
 (*                      A mettre dans utility-PF5.ml                   *)
 (***********************************************************************)
 
-(*Renvoie une liste de mot sans les espaces*)
-let make_list_string_list_without_space string = 
-  String.split_on_char ' ' string
 
-(*Renvoie une liste de mot sans le premiers mot*)  
-let rec list_without_first_word list_of_word iteration res_list = 
-  match list_of_word with
-  | [] -> res_list
-  | word::sub_list_of_word ->
-    if iteration = 0 then
-      list_without_first_word sub_list_of_word (iteration + 1) res_list
-    else 
-      list_without_first_word sub_list_of_word (iteration + 1) (word :: res_list)
-
-(*Renvoie une liste de mot sans le premiers mot et dans l'ordre*)       
-let list_without_first_word_clean list_of_word iteration res_list = 
-  let list = list_without_first_word list_of_word iteration res_list in
-  List.rev list 
-
-(*Renvoie une liste de mot sans les espaces et sans le premiers mot*)  
-let make_list_string_list_without_space_and_first_word string = 
-  let list_of_word = make_list_string_list_without_space string in 
-  list_without_first_word_clean list_of_word 0 [] 
-
-(*Renvoie le premier mot de la liste de ligne*)  
-let first_word_of_file_line string = 
-  List.hd (make_list_string_list_without_space string)
-
-(*construit une liste de ligne*)  
-let construct_file_line position indentation content =  
-  {position = position; indentation = indentation; content = content}
-
-(*Ajoute une ligne a la liste de ligne*)
-let add_file_line_to_list position indentation content list =
-  let file_line = construct_file_line position indentation content in
-  file_line::list
-
-(*Renvoie l indentation de la ligne*)  
-let rec get_indentation_from_line line count =
-  let line_size = String.length line in
-    if line_size = 0 then
-      count
-    else
-      if String.get line 0 = ' ' then
-        get_indentation_from_line (String.sub line 1 (line_size-1)) (count + 1)
-      else
-        count 
-
-(*renvoie la liste de mot sans "number"
-premiers mots*)        
-let rec skip_element list_of_word number =
-  if number <= 0 then
-    list_of_word
-  else
-    let list = list_without_first_word_clean list_of_word 0 [] in
-    skip_element list (number-1)
-
-(*Pour obtenir la liste de ligne d un "while" ou d un "if"*)     
-let rec obtain_sub_block list_of_file_line indentation list_result = 
-  match list_of_file_line with 
-  | [] -> list_result
-  | file_line :: sub_list_of_file_line ->
-    if file_line.indentation < indentation then
-      list_result
-    else
-      obtain_sub_block sub_list_of_file_line indentation (file_line :: list_result)
-
-(*Pour obtenir la liste de ligne d un "while" ou d un "if" dans le bon ordre*)       
-let obtain_sub_block_clean list_of_file_line indentation list_result = 
-  let list = obtain_sub_block list_of_file_line indentation list_result in
-  List.rev list
-  
-(*Pour obtenir la liste de ligne du "else"*)  
-let rec obtain_else_sub_block list_of_file_line indentation list_result else_was_readed = 
-  match list_of_file_line with 
-  | [] -> list_result
-  | file_line :: sub_list_of_file_line ->
-    if else_was_readed then
-      obtain_sub_block_clean sub_list_of_file_line indentation list_result
-      
-    else 
-      let first_word = first_word_of_file_line (file_line.content) in
-        
-      if file_line.indentation < indentation && first_word = "ELSE" then
-        obtain_else_sub_block list_of_file_line indentation list_result true
-        
-      else
-        obtain_else_sub_block sub_list_of_file_line indentation list_result else_was_readed         
 
 (*Permet de tester une expression dans 
 cas d'un problème*)        
@@ -217,3 +130,140 @@ let get_condition word =
   | ">"  -> Gt
   | "="  -> Eq
   | _  -> Ne   
+
+(*Renvoie une liste de mot sans les espaces*)
+let make_list_string_list_without_space string = 
+  String.split_on_char ' ' string
+
+(*Renvoie une liste de mot sans le premiers mot*)  
+let rec list_without_first_word list_of_word iteration res_list = 
+  match list_of_word with
+  | [] -> res_list
+  | word::sub_list_of_word ->
+    if iteration = 0 then
+      list_without_first_word sub_list_of_word (iteration + 1) res_list
+    else 
+      list_without_first_word sub_list_of_word (iteration + 1) (word :: res_list)
+
+(*Renvoie une liste de mot sans le premiers mot et dans l'ordre*)       
+let list_without_first_word_clean list_of_word iteration res_list = 
+  let list = list_without_first_word list_of_word iteration res_list in
+  List.rev list 
+
+(*Renvoie une liste de string*) 
+let rec construct_list_of_char string list_of_char = 
+  if String.length string <> List.length list_of_char then
+    let list_of_char_update = String.get string (List.length list_of_char) :: list_of_char in 
+    construct_list_of_char string list_of_char_update
+  else
+    list_of_char
+    
+(*Renvoie une liste de string avec les éléments dans le bon ordre*)    
+let construct_list_of_char_clean string list_of_char = 
+  let list = construct_list_of_char string list_of_char in
+  List.rev list  
+
+(*Renvoie une liste de mot sans les espaces et sans le premiers mot*)  
+let make_list_string_list_without_space_and_first_word string = 
+  let list_of_word = make_list_string_list_without_space string in 
+  list_without_first_word_clean list_of_word 0 [] 
+
+(*Renvoie le premier mot de la liste de ligne*)  
+let first_word_of_file_line string = 
+  List.hd (make_list_string_list_without_space string)
+
+(*construit une liste de ligne*)  
+let construct_file_line position indentation content =  
+  {position = position; indentation = indentation; content = content}
+
+(*Ajoute une ligne a la liste de ligne*)
+let add_file_line_to_list position indentation content list =
+  let file_line = construct_file_line position indentation content in
+  file_line::list
+
+(*Renvoie l indentation de la ligne*)  
+let rec get_indentation_from_line line count =
+  let line_size = String.length line in
+    if line_size = 0 then
+      count
+    else
+      if String.get line 0 = ' ' then
+        get_indentation_from_line (String.sub line 1 (line_size-1)) (count + 1)
+      else
+        count 
+
+(*renvoie la liste de mot sans "number"
+premiers mots*)        
+let rec skip_element list_of_word number =
+  if number <= 0 then
+    list_of_word
+  else
+    let list = list_without_first_word_clean list_of_word 0 [] in
+    skip_element list (number-1)
+
+let rec get_first_expr_list list_of_word =
+  let first_word = List.hd list_of_word in
+  let first_word_list_of_char = construct_list_of_char first_word [] in
+
+  if is_operator first_word then
+    let second_word = List.nth list_of_word 1 in
+
+    if is_operator second_word then
+      let list_res = get_first_expr_list (skip_element list_of_word 1) in
+      List.rev (first_word :: List.rev (list_res))
+
+    else  
+      [first_word; List.nth list_of_word 1; List.nth list_of_word 2]
+
+  else
+    [first_word]
+  
+  
+  (*match list with
+  | [] -> list_of_word_res
+  | element :: sub_list_of_word -> *)
+
+
+  (*let first_word = List.hd list_of_word in
+  let first_word_list_of_char = construct_list_of_char first_word [] in
+
+  if is_operator first_word then
+    let list = list_without_first_word_clean list_of_word 0 in 
+    let list_res = get_first_expr_list list list_of_word_res in
+    List.rev (first_word :: List.rev (list_res))
+  
+  else
+    List.rev (first_word :: List.rev (list_of_word_res))*)
+
+
+(*Pour obtenir la liste de ligne d un "while" ou d un "if"*)     
+let rec obtain_sub_block list_of_file_line indentation list_result = 
+  match list_of_file_line with 
+  | [] -> list_result
+  | file_line :: sub_list_of_file_line ->
+    if file_line.indentation < indentation then
+      list_result
+    else
+      obtain_sub_block sub_list_of_file_line indentation (file_line :: list_result)
+
+(*Pour obtenir la liste de ligne d un "while" ou d un "if" dans le bon ordre*)       
+let obtain_sub_block_clean list_of_file_line indentation list_result = 
+  let list = obtain_sub_block list_of_file_line indentation list_result in
+  List.rev list
+  
+(*Pour obtenir la liste de ligne du "else"*)  
+let rec obtain_else_sub_block list_of_file_line indentation list_result else_was_readed = 
+  match list_of_file_line with 
+  | [] -> list_result
+  | file_line :: sub_list_of_file_line ->
+    if else_was_readed then
+      obtain_sub_block_clean sub_list_of_file_line indentation list_result
+      
+    else 
+      let first_word = first_word_of_file_line (file_line.content) in
+        
+      if file_line.indentation < indentation && first_word = "ELSE" then
+        obtain_else_sub_block list_of_file_line indentation list_result true
+        
+      else
+        obtain_else_sub_block sub_list_of_file_line indentation list_result else_was_readed         

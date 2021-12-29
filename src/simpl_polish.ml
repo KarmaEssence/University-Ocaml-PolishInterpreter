@@ -61,6 +61,7 @@ let is_constant_case op expr_1 expr_2 =
 let make_contant_case op expr_1 expr_2 = 
   match op with
   | Add -> 
+    print_string "test + \n";
     if is_Var expr_1 && is_Num expr_2 then expr_1
     else expr_2
 
@@ -80,6 +81,7 @@ let make_contant_case op expr_1 expr_2 =
       else expr_2
 
   | Div ->
+    print_string "test\n";
     if is_Var expr_1 && is_Num expr_2 then 
       if get_expr expr_2 = 0 then Op (op, expr_1, expr_2)
       else expr_1
@@ -101,14 +103,19 @@ let make_contant_case op expr_1 expr_2 =
 (*Construit une expression simplifie*)    
 let make_simpl_expr op expr_1 expr_2 = 
   if is_constant_case op expr_1 expr_2 then
+    let () = print_string "test 3\n" in
     make_contant_case op expr_1 expr_2
   
   else 
     if is_Num expr_1 && is_Num expr_2 then
+      let () = print_string "test 4\n" in
       make_simpl_operation op expr_1 expr_2
 
     else  
-      Op(op, expr_1, expr_2)
+      if expr_1 = expr_2 && op = Sub then
+        Num (0)
+      else
+        Op(op, expr_1, expr_2)
 
 (*Simplifie l expression*)
 let rec simpl_expr expr = 
