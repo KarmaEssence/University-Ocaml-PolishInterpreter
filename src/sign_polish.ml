@@ -21,7 +21,7 @@ let op_sign_mod expr1 expr2 =
   | Neg, Pos -> [Neg; Zero; Pos]
   | (Pos|Neg|Zero), Zero
   | Error, _
-  | _, Error -> [Error]     
+  | _, Error -> [Error]   
 
 let op_sign_div expr1 expr2 = 
   match expr1, expr2 with
@@ -108,8 +108,7 @@ let comp_sign_eq expr1 expr2 =
 
 let comp_sign expr1 comp expr2 =
   match comp with
-  | Eq -> comp_sign_eq expr1 expr2
-  | Ne -> not(comp_sign_eq expr1 expr2)
+  | (Eq | Ne) -> comp_sign_eq expr1 expr2
   | Lt -> comp_sign_lt expr1 expr2
   | Le -> (comp_sign_eq expr1 expr2) || (comp_sign_lt expr1 expr2)
   | Gt -> comp_sign_gt expr1 expr2
@@ -135,36 +134,36 @@ let is_sign_inferior_of x y =
   | Error, Error -> true
   | _, _ -> false 
 
-  let rec quicksort list = 
-    match list with
-    | [] -> []
-    | [element] -> [element]
-    | _ ->
-      let list_temp = List.tl list in
-      let first_element = List.nth list 0 in 
-      let rec copy word list first_element = 
-      if word = "inf" then 
-        match list with
-        | [] -> [] 
-        | element :: sub_list -> 
-          if is_sign_inferior_of element first_element then 
-            [element] @ copy word sub_list first_element 
+let rec quicksort list = 
+  match list with
+  | [] -> []
+  | [element] -> [element]
+  | _ ->
+    let list_temp = List.tl list in
+    let first_element = List.nth list 0 in 
+    let rec copy word list first_element = 
+    if word = "inf" then 
+      match list with
+      | [] -> [] 
+      | element :: sub_list -> 
+        if is_sign_inferior_of element first_element then 
+          [element] @ copy word sub_list first_element 
 
-          else copy word sub_list first_element
+        else copy word sub_list first_element
       
-      else 
-        match list with
-        | [] -> [] 
-        | element :: sub_list -> 
-          if not (is_sign_inferior_of element first_element) then 
-            [element] @ copy word sub_list first_element
+    else 
+      match list with
+      | [] -> [] 
+      | element :: sub_list -> 
+        if not (is_sign_inferior_of element first_element) then 
+          [element] @ copy word sub_list first_element
                     
-          else copy word sub_list first_element
+        else copy word sub_list first_element
 
-      in 
-      let left_sort = quicksort (copy "inf" list_temp first_element) in
-      let right_sort = quicksort (copy "sup" list_temp first_element)  in
-      left_sort @ [first_element] @ right_sort    
+    in 
+    let left_sort = quicksort (copy "inf" list_temp first_element) in
+    let right_sort = quicksort (copy "sup" list_temp first_element)  in
+    left_sort @ [first_element] @ right_sort    
       
       
 let rec make_sign_operation list1 list2 op list_res =  
@@ -272,7 +271,16 @@ let find_map map =
     print_string "\n"
   else
     print_string "safe\n" 
-  
+
+let rec compare_list list_1 list_2 = 
+  match list_1, list_2 with
+  | [], [] -> true
+  | list, [] 
+  | [], list -> false  
+  | x:: sub_list_1, y:: sub_list_2 -> 
+    if x = y then compare_list sub_list_1 sub_list_2
+    else false 
+
 let rec sign_block list_of_block map = 
   match list_of_block with
   | [] -> map
@@ -311,7 +319,6 @@ let rec sign_block list_of_block map =
       else  
         if not (NameTable.exists element_contains_error map) && has_error_condition_sign_type cond map then 
           let map_with_error = NameTable.add (string_of_int position) [] map in
-          print_string "je suis ici\n";
           sign_block sub_list_of_block map_with_error
           
         else
@@ -320,9 +327,25 @@ let rec sign_block list_of_block map =
           sign_block sub_list_of_block new_map2
   
     | While (cond, block) ->
-      sign_block sub_list_of_block map
-      
+      if apply_condition_sign_type cond map then
 
+        let new_map = sign_block block map in
+        if NameTable.equal compare_list map new_map then
+          let () = print_string "random.org\n" in
+          
+          sign_block sub_list_of_block map
+        else 
+          let () = print_string "je suis la \n" in
+          sign_block list_of_block new_map
+
+      else  
+        if not (NameTable.exists element_contains_error map) && has_error_condition_sign_type cond map then 
+          let map_with_error = NameTable.add (string_of_int position) [] map in
+          sign_block sub_list_of_block map_with_error
+          
+        else
+          sign_block sub_list_of_block map
+      
 (*Permet d evaluer un code en syntaxe abstraite*)        
 let sign_polish (p:program) : unit = 
   let map = NameTable.empty in 

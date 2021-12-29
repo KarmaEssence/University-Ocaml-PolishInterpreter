@@ -1,6 +1,6 @@
 READ t
 n := - 0 1
-IF n < 0
+IF n = 0
   res := - 0 n
 ELSE
   res := / 0 n
