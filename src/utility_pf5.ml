@@ -195,13 +195,35 @@ let rec get_indentation_from_line line count =
 (*renvoie la liste de mot sans "number"
 premiers mots*)        
 let rec skip_element list_of_word number =
-  if number <= 0 then
+  if List.length list_of_word = 0 then
+    []
+  else if number <= 0 then
     list_of_word
   else
     let list = list_without_first_word_clean list_of_word 0 [] in
     skip_element list (number-1)
 
 let rec get_first_expr_list list_of_word =
+  (*match list_of_word with
+  | [] -> list_of_word_res
+  | first_word :: sub_list_of_word ->
+
+    print_string (first_word ^ ""); 
+    let first_word_list_of_char = construct_list_of_char first_word [] in 
+
+    if is_operator first_word && already_seen_number then
+      list_of_word_res
+
+    else if is_number first_word_list_of_char && already_seen_number = false then 
+      let new_list_of_word_res = List.rev (first_word :: List.rev (list_of_word_res)) in
+      get_first_expr_list sub_list_of_word true new_list_of_word_res
+
+    else  
+      let new_list_of_word_res = List.rev (first_word :: List.rev (list_of_word_res)) in
+      get_first_expr_list sub_list_of_word already_seen_number new_list_of_word_res*)
+    
+
+
   let first_word = List.hd list_of_word in
   let first_word_list_of_char = construct_list_of_char first_word [] in
 

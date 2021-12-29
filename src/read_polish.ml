@@ -54,7 +54,7 @@ let rec construct_expression list_of_word =
   if is_operator first_word then
  
     let sub_string_1 = get_first_expr_list (skip_element list_of_word 1) in
-    let sub_string_2 = skip_element list_of_word ((List.length sub_string_1) + 1) in
+    let sub_string_2 = skip_element list_of_word ((List.length sub_string_1 + 1)) in
     (*let sub_string_1 = skip_element list_of_word 1 in
     let sub_string_2 = skip_element list_of_word 2 in*)
     let exp_1 = construct_expression sub_string_1 in
