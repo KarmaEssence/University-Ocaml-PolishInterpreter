@@ -12,160 +12,19 @@ open Eval_polish
 (*                             sign_polish                             *)
 (***********************************************************************)
 
-let op_sign_mod expr1 expr2 = 
-  match expr1, expr2 with
-  | Zero, (Pos|Neg) -> [Zero]
-  | Pos, Pos -> [Zero; Pos]
-  | Neg, Neg -> [Neg; Zero]
-  | Pos, Neg
-  | Neg, Pos -> [Neg; Zero; Pos]
-  | (Pos|Neg|Zero), Zero
-  | Error, _
-  | _, Error -> [Error]   
+let rec make_sign_comparaison list1 list2 comp =
+  match list1 with
+  |[] -> true
+  |x:: sub_list_1 -> 
+    match list2 with
+    |[] -> true
+    |y:: sub_list_2 -> 
+      if comp_sign x comp y then
+        make_sign_comparaison sub_list_1 sub_list_2 comp
+      else 
+        false   
 
-let op_sign_div expr1 expr2 = 
-  match expr1, expr2 with
-  | Pos, Pos 
-  | Neg, Neg -> [Pos]
-  | Neg, Pos
-  | Pos, Neg -> [Neg]
-  | Zero, (Pos|Neg) -> [Zero]
-  | _, Zero
-  | Error, _
-  | _, Error -> [Error]
 
-let op_sign_mul expr1 expr2 = 
-  match expr1, expr2 with
-  | Pos, Pos
-  | Neg, Neg -> [Pos]
-  | Pos, Neg
-  | Neg, Pos -> [Neg]
-  | Zero, (Zero | Pos | Neg) 
-  | (Pos | Neg), Zero -> [Zero]
-  | Error, _
-  | _, Error -> [Error]  
-  
-let op_sign_sub expr1 expr2 = 
-  match expr1, expr2 with
-  | Neg, Neg
-  | Pos, Pos -> [Neg; Zero; Neg]
-  | Neg, Pos
-  | Zero, Pos 
-  | Neg, Zero -> [Neg]
-  | Pos, Neg
-  | Zero, Neg
-  | Pos, Zero -> [Pos]
-  | Zero, Zero -> [Zero]
-  | Error, _
-  | _, Error -> [Error]  
-
-let op_sign_add expr1 expr2 = 
-  match expr1, expr2 with
-  | Pos, Pos 
-  | Pos, Zero
-  | Zero, Pos -> [Pos]
-  | Neg, Neg 
-  | Zero, Neg
-  | Neg, Zero -> [Neg]
-  | Zero, Zero -> [Zero]
-  | Pos, Neg
-  | Neg, Pos -> [Neg; Zero; Pos]
-  | Error, _
-  | _, Error -> [Error]  
-
-let op_sign expr1 op expr2 =
-  match op with
-  | Add -> 
-    op_sign_add expr1 expr2
-  | Sub -> 
-    op_sign_sub expr1 expr2
-  | Mul -> 
-    op_sign_mul expr1 expr2
-  | Div -> 
-    op_sign_div expr1 expr2
-   
-  | Mod ->
-    op_sign_mod expr1 expr2
-
-let comp_sign_gt expr1 expr2 =
-  match expr1, expr2 with
-  |Pos, (Neg|Zero)
-  |Zero, Neg -> true
-  |_, _ -> false  
-
-let comp_sign_lt expr1 expr2 =
-  match expr1, expr2 with
-  |(Neg|Zero), Pos
-  |Neg, Zero -> true
-  |_, _ -> false  
-
-let comp_sign_eq expr1 expr2 =
-  match expr1, expr2 with
-  |Pos, Pos
-  |Neg, Neg
-  |Zero, Zero -> true
-  |_, _ -> false   
-
-let comp_sign expr1 comp expr2 =
-  match comp with
-  | (Eq | Ne) -> comp_sign_eq expr1 expr2
-  | Lt -> comp_sign_lt expr1 expr2
-  | Le -> (comp_sign_eq expr1 expr2) || (comp_sign_lt expr1 expr2)
-  | Gt -> comp_sign_gt expr1 expr2
-  | Ge -> (comp_sign_eq expr1 expr2) || (comp_sign_gt expr1 expr2)
-
-let rec avoid_duplicate_sign_type_in_list list list_res =
-  match list with 
-  | [] -> list_res
-  | x :: sub_list ->
-    if List.mem x list_res then
-        avoid_duplicate_sign_type_in_list sub_list list_res
-    else 
-        avoid_duplicate_sign_type_in_list sub_list (x::list_res)
-
-let is_sign_inferior_of x y = 
-  match x, y with
-  | Neg, (Zero | Pos | Error) 
-  | Zero, (Pos | Error) 
-  | Pos, (Error)
-  | Neg, Neg 
-  | Zero, Zero 
-  | Pos, Pos  
-  | Error, Error -> true
-  | _, _ -> false 
-
-let rec quicksort list = 
-  match list with
-  | [] -> []
-  | [element] -> [element]
-  | _ ->
-    let list_temp = List.tl list in
-    let first_element = List.nth list 0 in 
-    let rec copy word list first_element = 
-    if word = "inf" then 
-      match list with
-      | [] -> [] 
-      | element :: sub_list -> 
-        if is_sign_inferior_of element first_element then 
-          [element] @ copy word sub_list first_element 
-
-        else copy word sub_list first_element
-      
-    else 
-      match list with
-      | [] -> [] 
-      | element :: sub_list -> 
-        if not (is_sign_inferior_of element first_element) then 
-          [element] @ copy word sub_list first_element
-                    
-        else copy word sub_list first_element
-
-    in 
-    let left_sort = quicksort (copy "inf" list_temp first_element) in
-    let right_sort = quicksort (copy "sup" list_temp first_element)  in
-    left_sort @ [first_element] @ right_sort    
-      
-      
 let rec make_sign_operation list1 list2 op list_res =  
   match list1 with
   |[] -> list_res
@@ -182,7 +41,7 @@ let rec make_sign_operation list1 list2 op list_res =
 
     in 
     let list_new_res = make_sub_sign_operation x list2 op list_res in
-    make_sign_operation sub_list_1 list2 op list_new_res
+    make_sign_operation sub_list_1 list2 op list_new_res  
 
 let rec expr_sign expr map =
   match expr with
@@ -195,22 +54,14 @@ let rec expr_sign expr map =
       NameTable.find name map
     else []
   |Op (op, expr_1, expr_2) -> 
-    let expr_1_res = expr_sign expr_1 map in
-    let expr_2_res = expr_sign expr_2 map in
-    let list_res = make_sign_operation expr_1_res expr_2_res op [] in
-    quicksort list_res
+    if is_Num expr_1 && is_Num expr_2 then
+      obtains_sign_from_number op (get_expr expr_1) (get_expr expr_2)
 
-let rec make_sign_comparaison list1 list2 comp =
-  match list1 with
-  |[] -> true
-  |x:: sub_list_1 -> 
-    match list2 with
-    |[] -> true
-    |y:: sub_list_2 -> 
-      if comp_sign x comp y then
-        make_sign_comparaison sub_list_1 sub_list_2 comp
-      else 
-        false   
+    else   
+      let expr_1_res = expr_sign expr_1 map in
+      let expr_2_res = expr_sign expr_2 map in
+      let list_res = make_sign_operation expr_1_res expr_2_res op [] in
+      quicksort list_res      
     
 let apply_condition_sign_type cond map =
   match cond with
@@ -271,15 +122,6 @@ let find_map map =
     print_string "\n"
   else
     print_string "safe\n" 
-
-let rec compare_list list_1 list_2 = 
-  match list_1, list_2 with
-  | [], [] -> true
-  | list, [] 
-  | [], list -> false  
-  | x:: sub_list_1, y:: sub_list_2 -> 
-    if x = y then compare_list sub_list_1 sub_list_2
-    else false 
 
 let rec sign_block list_of_block map = 
   match list_of_block with
