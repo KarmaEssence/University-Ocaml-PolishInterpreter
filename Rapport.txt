@@ -132,6 +132,10 @@ Du 24 décembre au 31 décembre :
     - Mise en place du vars_polish (par Léo)
     - Mise en place du sign_polish (par Kévin)
 
+Du 31 décembre au 10 janvier :
+
+    - Ajout de fichier .mli, correction du code (Kévin et Léo)      
+
 (***********************************************************************)
 (*                           6. Misc                                   *)                       
 (***********************************************************************)    
