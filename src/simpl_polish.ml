@@ -11,7 +11,7 @@ open Utility_pf5
 
  
 (*Fais une operation elementaire pour deux expressions*)
-let make_simpl_operation op expr_1_res expr_2_res = 
+let make_simpl_operation (op : op) (expr_1_res : expr) (expr_2_res : expr) : expr = 
   match op with
   | Add -> Num (get_expr expr_1_res  +  get_expr expr_2_res) 
   | Sub -> Num (get_expr expr_1_res  -  get_expr expr_2_res) 
@@ -20,7 +20,7 @@ let make_simpl_operation op expr_1_res expr_2_res =
   | Mod -> Num (get_expr expr_1_res  mod  get_expr expr_2_res)
 
 (*Verifie que l expression est dans le cas particulier des constantes 0 et 1*)  
-let is_constant_case op expr_1 expr_2 = 
+let is_constant_case (op : op) (expr_1 : expr) (expr_2 : expr) : bool = 
   match op with
   | Add -> 
     if (is_Var expr_1 && is_Num expr_2 && (get_expr expr_2) = 0) 
@@ -58,7 +58,7 @@ let is_constant_case op expr_1 expr_2 =
     else false 
 
 (*Simplifie l expression en fonction des cas particuliers des constantes 0 et 1*)    
-let make_contant_case op expr_1 expr_2 = 
+let make_contant_case (op : op) (expr_1 : expr) (expr_2 : expr) : expr = 
   match op with
   | Add -> 
     if is_Var expr_1 && is_Num expr_2 then expr_1
@@ -99,7 +99,7 @@ let make_contant_case op expr_1 expr_2 =
       else Op (op, expr_1, expr_2)
 
 (*Construit une expression simplifie*)    
-let make_simpl_expr op expr_1 expr_2 = 
+let make_simpl_expr (op : op) (expr_1 : expr) (expr_2 : expr) : expr = 
   if is_constant_case op expr_1 expr_2 then
     make_contant_case op expr_1 expr_2
   
@@ -113,7 +113,7 @@ let make_simpl_expr op expr_1 expr_2 =
       Op(op, expr_1, expr_2)
 
 (*Simplifie l expression*)
-let rec simpl_expr expr = 
+let rec simpl_expr (expr : expr) : expr = 
   match expr with
   | Num (value) -> Num (value)
   | Var (name) -> Var (name)
@@ -123,7 +123,7 @@ let rec simpl_expr expr =
     make_simpl_expr op expr_1_res expr_2_res
 
 (*Simplifie la condition*)    
-let simpl_cond cond = 
+let simpl_cond (cond : cond) : cond = 
   match cond with
   | (expr_1, comp, expr_2) ->
     let expr_1_res = simpl_expr expr_1 in
@@ -131,7 +131,7 @@ let simpl_cond cond =
     (expr_1_res, comp, expr_2_res)
 
 (*Regarde si expr_1 et expr_2 sont des entiers*)    
-let can_simpl_block cond = 
+let can_simpl_block (cond : cond) : bool = 
   match cond with
   | (expr_1, comp, expr_2) ->
     
@@ -139,7 +139,7 @@ let can_simpl_block cond =
     else false
 
 (*Verifie la condition*)    
-let choose_simpl_block cond = 
+let choose_simpl_block (cond : cond) : bool = 
   match cond with
   | (expr_1, comp, expr_2) ->
     
@@ -152,7 +152,7 @@ let choose_simpl_block cond =
     | Ge -> expr_1 >= expr_2 
 
 (*Renvoie une liste de block simplifie (en syntaxe abstraite)*)
-let rec convert_block_to_simpl_block block simpl_block = 
+let rec convert_block_to_simpl_block (block : program) (simpl_block : program) : program = 
   match block with
   | [] -> simpl_block
   | (position, instruction)::sub_list_of_block ->
@@ -216,7 +216,7 @@ let rec convert_block_to_simpl_block block simpl_block =
         convert_block_to_simpl_block sub_list_of_block block_res
 
 (*Renvoie une liste de block simplifie (en syntaxe abstraite et dans le bon ordre)*)         
-let convert_block_to_simpl_block_clean block simpl_block = 
+let convert_block_to_simpl_block_clean (block : program) (simpl_block : program) : program = 
   let list = convert_block_to_simpl_block block simpl_block in
   List.rev list
 

@@ -10,7 +10,7 @@ open Types_pf5
 
 (*Permet de tester une expression dans 
 cas d'un problème*)        
-let rec test_expr expr = 
+let rec test_expr (expr : expr) : unit = 
   match expr with
   | Num (value) -> 
     print_string "num\n";
@@ -23,7 +23,7 @@ let rec test_expr expr =
 
 (*Regarde l expression est
 un entier*)     
-let is_Num expr = 
+let is_Num (expr : expr) : bool = 
   match expr with
   | Num (_) -> true
   | Var (_) -> false
@@ -31,20 +31,20 @@ let is_Num expr =
 
 (*Regarde l expression est
 une variable*)  
-let is_Var expr = 
+let is_Var (expr : expr) : bool = 
   match expr with
   | Num (_) -> false
   | Var (_) -> true
   | Op (_) -> false  
 
 (*Recupere la valeur d une expression*)  
-let get_expr expr = 
+let get_expr (expr : expr) : int = 
   match expr with
   | Num (value) -> value
   | _ -> 0         
 
 (*Transforme un operateur en string*)
-let make_string_operator op = 
+let make_string_operator (op : op) : string = 
   match op with
     | Add -> "+"
     | Sub -> "-"
@@ -54,7 +54,7 @@ let make_string_operator op =
    
 (*Transforme un operateur de comparaison 
 en string*)    
-let make_string_comparation comp = 
+let make_string_comparation (comp : comp) : string = 
   match comp with
     | Eq -> " = "
     | Ne -> " <> "
@@ -65,7 +65,7 @@ let make_string_comparation comp =
 
 (*regarde si le string est un 
 operateur de comparaison*)   
-let is_comp word = 
+let is_comp (word : string) : bool = 
   match word with
   | "<=" -> true
   | "<"  -> true
@@ -77,7 +77,7 @@ let is_comp word =
 
 (*regarde si le string est un 
 operateur*)  
-let is_operator word = 
+let is_operator (word : string) : bool = 
   match word with
   | "+" -> true
   | "-"  -> true
@@ -88,10 +88,9 @@ let is_operator word =
  
 (*Regarde si la liste de string est 
 la representation d'un entier*)  
-let rec is_number list_of_char =  
+let rec is_number (list_of_char : char list) : bool =  
   match list_of_char with
-  | [] -> 
-    true
+  | [] -> true
   | character :: sub_list_of_char ->
  
   (*Transforme un string de 0 a 9
@@ -111,7 +110,7 @@ let rec is_number list_of_char =
     | _ -> false  
              
 (*Renvoie l'operateur (en syntaxe abstraite)*)             
-let get_operator word = 
+let get_operator (word : string) : op = 
   match word with
   | "+" -> Add
   | "-"  -> Sub
@@ -120,7 +119,7 @@ let get_operator word =
   | _ -> Mod   
              
 (*Renvoie l'operateur de comparaison (en syntaxe abstraite)*)  
-let get_condition word =
+let get_condition (word : string) : comp =
   match word with
   | "<=" -> Le
   | "<"  -> Lt
@@ -129,109 +128,118 @@ let get_condition word =
   | "="  -> Eq
   | _  -> Ne   
 
-  let op_sign_mod expr1 expr2 = 
-    match expr1, expr2 with
-    | Zero, (Pos|Neg) -> [Zero]
-    | Pos, Pos -> [Zero; Pos]
-    | Neg, Neg -> [Neg; Zero]
-    | Pos, Neg
-    | Neg, Pos -> [Neg; Zero; Pos]
-    | (Pos|Neg|Zero), Zero
-    | Error, _
-    | _, Error -> [Error]   
-  
-  let op_sign_div expr1 expr2 = 
-    match expr1, expr2 with
-    | Pos, Pos 
-    | Neg, Neg -> [Pos]
-    | Neg, Pos
-    | Pos, Neg -> [Neg]
-    | Zero, (Pos|Neg) -> [Zero]
-    | _, Zero
-    | Error, _
-    | _, Error -> [Error]
-  
-  let op_sign_mul expr1 expr2 = 
-    match expr1, expr2 with
-    | Pos, Pos
-    | Neg, Neg -> [Pos]
-    | Pos, Neg
-    | Neg, Pos -> [Neg]
-    | Zero, (Zero | Pos | Neg) 
-    | (Pos | Neg), Zero -> [Zero]
-    | Error, _
-    | _, Error -> [Error]  
-    
-  let op_sign_sub expr1 expr2 = 
-    match expr1, expr2 with
-    | Neg, Neg
-    | Pos, Pos -> [Neg; Zero; Pos]
-    | Neg, Pos
-    | Zero, Pos 
-    | Neg, Zero -> [Neg]
-    | Pos, Neg
-    | Zero, Neg
-    | Pos, Zero -> [Pos]
-    | Zero, Zero -> [Zero]
-    | Error, _
-    | _, Error -> [Error]  
-  
-  let op_sign_add expr1 expr2 = 
-    match expr1, expr2 with
-    | Pos, Pos 
-    | Pos, Zero
-    | Zero, Pos -> [Pos]
-    | Neg, Neg 
-    | Zero, Neg
-    | Neg, Zero -> [Neg]
-    | Zero, Zero -> [Zero]
-    | Pos, Neg
-    | Neg, Pos -> [Neg; Zero; Pos]
-    | Error, _
-    | _, Error -> [Error]  
-  
-  let op_sign expr1 op expr2 =
-    match op with
-    | Add -> 
-      op_sign_add expr1 expr2
-    | Sub -> 
-      op_sign_sub expr1 expr2
-    | Mul -> 
-      op_sign_mul expr1 expr2
-    | Div -> 
-      op_sign_div expr1 expr2
-     
-    | Mod ->
-      op_sign_mod expr1 expr2
-  
-  let comp_sign_gt expr1 expr2 =
-    match expr1, expr2 with
-    |Pos, (Neg|Zero)
-    |Zero, Neg -> true
-    |_, _ -> false  
-  
-  let comp_sign_lt expr1 expr2 =
-    match expr1, expr2 with
-    |(Neg|Zero), Pos
-    |Neg, Zero -> true
-    |_, _ -> false  
-  
-  let comp_sign_eq expr1 expr2 =
-    match expr1, expr2 with
-    |Pos, Pos
-    |Neg, Neg
-    |Zero, Zero -> true
-    |_, _ -> false   
-  
-  let comp_sign expr1 comp expr2 =
-    match comp with
-    | (Eq | Ne) -> comp_sign_eq expr1 expr2
-    | Lt -> comp_sign_lt expr1 expr2
-    | Le -> (comp_sign_eq expr1 expr2) || (comp_sign_lt expr1 expr2)
-    | Gt -> comp_sign_gt expr1 expr2
-    | Ge -> (comp_sign_eq expr1 expr2) || (comp_sign_gt expr1 expr2)
+(*Renvoie la liste liste de signe en fonction de l operation
+modulo*)
+let op_sign_mod (expr1 : sign) (expr2 : sign) : sign list = 
+  match expr1, expr2 with
+  | Zero, (Pos|Neg) -> [Zero]
+  | Pos, Pos -> [Zero; Pos]
+  | Neg, Neg -> [Neg; Zero]
+  | Pos, Neg
+  | Neg, Pos -> [Neg; Zero; Pos]
+  | (Pos|Neg|Zero), Zero
+  | Error, _
+  | _, Error -> [Error]   
 
-let obtains_sign_from_number op num_1 num_2 = 
+(*Renvoie la liste liste de signe en fonction de l operation
+division*)  
+let op_sign_div (expr1 : sign) (expr2 : sign) : sign list = 
+  match expr1, expr2 with
+  | Pos, Pos 
+  | Neg, Neg -> [Pos]
+  | Neg, Pos
+  | Pos, Neg -> [Neg]
+  | Zero, (Pos|Neg) -> [Zero]
+  | _, Zero
+  | Error, _
+  | _, Error -> [Error]
+
+(*Renvoie la liste liste de signe en fonction de l operation
+multiplication*)  
+let op_sign_mul (expr1 : sign) (expr2 : sign) : sign list = 
+  match expr1, expr2 with
+  | Pos, Pos
+  | Neg, Neg -> [Pos]
+  | Pos, Neg
+  | Neg, Pos -> [Neg]
+  | Zero, (Zero | Pos | Neg) 
+  | (Pos | Neg), Zero -> [Zero]
+  | Error, _
+  | _, Error -> [Error]  
+
+(*Renvoie la liste liste de signe en fonction de l operation
+soustraction*)  
+let op_sign_sub (expr1 : sign) (expr2 : sign) : sign list = 
+  match expr1, expr2 with
+  | Neg, Neg
+  | Pos, Pos -> [Neg; Zero; Pos]
+  | Neg, Pos
+  | Zero, Pos 
+  | Neg, Zero -> [Neg]
+  | Pos, Neg
+  | Zero, Neg
+  | Pos, Zero -> [Pos]
+  | Zero, Zero -> [Zero]
+  | Error, _
+  | _, Error -> [Error]  
+ 
+(*Renvoie la liste liste de signe en fonction de l operation
+addition*)  
+let op_sign_add (expr1 : sign) (expr2 : sign) : sign list = 
+  match expr1, expr2 with
+  | Pos, Pos 
+  | Pos, Zero
+  | Zero, Pos -> [Pos]
+  | Neg, Neg 
+  | Zero, Neg
+  | Neg, Zero -> [Neg]
+  | Zero, Zero -> [Zero]
+  | Pos, Neg
+  | Neg, Pos -> [Neg; Zero; Pos]
+  | Error, _
+  | _, Error -> [Error]  
+  
+let op_sign (expr1 : sign) (op : op) (expr2 : sign) : sign list =
+  match op with
+  | Add -> 
+    op_sign_add expr1 expr2
+  | Sub -> 
+    op_sign_sub expr1 expr2
+  | Mul -> 
+    op_sign_mul expr1 expr2
+  | Div -> 
+    op_sign_div expr1 expr2
+  | Mod ->
+    op_sign_mod expr1 expr2
+  
+let comp_sign_gt (expr1 : sign) (expr2 : sign) : bool =
+  match expr1, expr2 with
+  |Pos, (Neg|Zero)
+  |Zero, Neg -> true
+  |_, _ -> false  
+  
+let comp_sign_lt (expr1 : sign) (expr2 : sign) : bool =
+  match expr1, expr2 with
+  |(Neg|Zero), Pos
+  |Neg, Zero -> true
+  |_, _ -> false  
+  
+let comp_sign_eq (expr1 : sign) (expr2 : sign) : bool =
+  match expr1, expr2 with
+  |Pos, Pos
+  |Neg, Neg
+  |Zero, Zero -> true
+  |_, _ -> false   
+  
+let comp_sign (expr1 : sign) (comp : comp) (expr2 : sign) : bool =
+  match comp with
+  | (Eq | Ne) -> comp_sign_eq expr1 expr2
+  | Lt -> comp_sign_lt expr1 expr2
+  | Le -> (comp_sign_eq expr1 expr2) || (comp_sign_lt expr1 expr2)
+  | Gt -> comp_sign_gt expr1 expr2
+  | Ge -> (comp_sign_eq expr1 expr2) || (comp_sign_gt expr1 expr2)
+
+let obtains_sign_from_number (op : op) (num_1 : int) (num_2 : int) : int = 
   match op with 
   | Add -> [Pos]
   | Sub -> 
@@ -262,7 +270,7 @@ let obtains_sign_from_number op num_1 num_2 =
       [Neg]
     else [Pos]
     
-let is_sign_inferior_of x y = 
+let is_sign_inferior_of (x : sign) (y : sign) = 
   match x, y with
   | Neg, (Zero | Pos | Error) 
   | Zero, (Pos | Error) 
