@@ -32,12 +32,15 @@ let print_first_line (key : string) (value : string) : unit =
 let print_second_line (key : string) (value : string) : unit =
   print_string value
 
+(*Pour afficher toute les variables du programmes*)  
 let find_map (map : string NameTable.t) : unit =
     NameTable.iter print_first_line map
 
+(*Pour afficher toute les variables non initialisés du programmes*)     
 let find_map2 (map : string NameTable.t) : unit =
   NameTable.iter print_second_line map
 
+(*Rempli la map avec les variables du programme*)  
 let rec vars_block (list_of_block : program) (map : string NameTable.t) : string NameTable.t = 
   match list_of_block with
   | [] -> map
@@ -69,7 +72,9 @@ let rec vars_block (list_of_block : program) (map : string NameTable.t) : string
       let new_map = vars_block block map in
       vars_block sub_list_of_block new_map
       
-
+(*affiche deux lignes, la première affiche toute
+les variables et la seconde affiche les variables non
+initialisees*)
 let vars_polish (p:program) : unit = 
   let map = NameTable.empty in 
   print_string "\n"; 
