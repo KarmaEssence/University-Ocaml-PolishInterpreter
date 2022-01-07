@@ -10,7 +10,7 @@ open Utility_pf5
 (***********************************************************************)
 
 (*Renvoie la liste de mot avant d'avoir vu l'operateur de comparaison*) 
-let rec make_list_of_word_before_operator list_of_word list_result = 
+let rec make_list_of_word_before_operator (list_of_word : string list) (list_result : string list) : string list = 
   match list_of_word with
   | [] -> list_result
   | word :: sub_list_of_word ->
@@ -20,12 +20,12 @@ let rec make_list_of_word_before_operator list_of_word list_result =
       make_list_of_word_before_operator sub_list_of_word (word :: list_result) 
 
 (*Renvoie la liste de mot (dans le bon ordre) avant d'avoir vu l'operateur de comparaison*)     
-let make_list_of_word_before_operator_clean list_of_word list_result = 
+let make_list_of_word_before_operator_clean (list_of_word : string list) (list_result : string list) : string list = 
   let list = make_list_of_word_before_operator list_of_word list_result in 
   List.rev list
 
 (*Renvoie la liste de mot apres avoir vu l'operateur de comparaison*)  
-let rec make_list_of_word_after_operator list_of_word =  
+let rec make_list_of_word_after_operator (list_of_word : string list) : string list =  
   match list_of_word with
   | [] -> []
   | word :: sub_list_of_word -> 
@@ -35,7 +35,7 @@ let rec make_list_of_word_after_operator list_of_word =
       make_list_of_word_after_operator sub_list_of_word
 
 (*Renvoie l'operateur de comparaison dans la liste de mot*)      
-let rec search_string_operator list_of_word =  
+let rec search_string_operator (list_of_word : string list) : string =  
   match list_of_word with
   | [] -> ""
   | word :: sub_list_of_word ->
@@ -45,7 +45,7 @@ let rec search_string_operator list_of_word =
       search_string_operator sub_list_of_word
 
 (*Renvoie une liste de string*) 
-let rec construct_list_of_char string list_of_char = 
+let rec construct_list_of_char (string : string) (list_of_char : char list) : char list = 
   if String.length string <> List.length list_of_char then
     let list_of_char_update = String.get string (List.length list_of_char) :: list_of_char in 
     construct_list_of_char string list_of_char_update
@@ -53,12 +53,12 @@ let rec construct_list_of_char string list_of_char =
     list_of_char
     
 (*Renvoie une liste de string avec les éléments dans le bon ordre*)    
-let construct_list_of_char_clean string list_of_char = 
+let construct_list_of_char_clean (string : string) (list_of_char : char list) : char list = 
   let list = construct_list_of_char string list_of_char in
   List.rev list
 
 (*Renvoie une expression (en syntaxe abstraite)*)    
-let rec construct_expression list_of_word = 
+let rec construct_expression (list_of_word : string list) : expr = 
   let first_word = List.hd list_of_word in
   let first_word_list_of_char = construct_list_of_char first_word [] in
 
@@ -78,7 +78,7 @@ let rec construct_expression list_of_word =
     Var (first_word)
 
 (*Renvoie une condition (en syntaxe abstraite)*)    
-let make_condition list_of_word =
+let make_condition (list_of_word : string list) : cond =
   let list_1 = make_list_of_word_before_operator_clean list_of_word [] in
   let list_2 = make_list_of_word_after_operator list_of_word in
   let exp_1 = construct_expression list_1 in
@@ -86,7 +86,7 @@ let make_condition list_of_word =
   (exp_1, get_condition (search_string_operator list_of_word), exp_2);;    
 
 (*Renvoie une liste de block (en syntaxe abstraite)*)  
-let rec convert_file_line_list_to_block list_of_file_line block indentation = 
+let rec convert_file_line_list_to_block (list_of_file_line : file_line list) (block : program) (indentation : int) : program = 
   match list_of_file_line with
   | [] -> block
   | file_line::sub_list_of_file_line ->
@@ -143,7 +143,7 @@ let rec convert_file_line_list_to_block list_of_file_line block indentation =
           convert_file_line_list_to_block sub_list_of_file_line block indentation
 
 (*Renvoie une liste de block (en syntaxe abstraite et dans le bon ordre)*)          
-let clean_convert_file_line_list_to_block list_of_file_line block indentation = 
+let clean_convert_file_line_list_to_block (list_of_file_line : file_line list) (block : program) (indentation : int) : program = 
   let list =  convert_file_line_list_to_block list_of_file_line block indentation in
   List.rev list
 
@@ -153,7 +153,7 @@ let clean_convert_file_line_list_to_block list_of_file_line block indentation =
 (***********************************************************************)
 
 (*Lis le fichier, recupere toutes les lignes et les renvoies*)
-let rec get_file_lines_from_files file position list_of_file_lines =
+let rec get_file_lines_from_files (file : in_channel) (position : int) (list_of_file_lines : file_line list) =
   try 
 
     let line = input_line file in 

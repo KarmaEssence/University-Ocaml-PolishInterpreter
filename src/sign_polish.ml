@@ -12,7 +12,7 @@ open Eval_polish
 (*                             sign_polish                             *)
 (***********************************************************************)
 
-let rec make_sign_comparaison list1 list2 comp =
+let rec make_sign_comparaison (list1 : sign list) (list2 : sign list) (comp : comp) : bool =
   match list1 with
   |[] -> true
   |x:: sub_list_1 -> 
@@ -25,7 +25,7 @@ let rec make_sign_comparaison list1 list2 comp =
         false   
 
 
-let rec make_sign_operation list1 list2 op list_res =  
+let rec make_sign_operation (list1 : sign list) (list2 : sign list) (op : op) (list_res : sign list) : sign list =  
   match list1 with
   |[] -> list_res
   |x:: sub_list_1 -> 
@@ -43,7 +43,7 @@ let rec make_sign_operation list1 list2 op list_res =
     let list_new_res = make_sub_sign_operation x list2 op list_res in
     make_sign_operation sub_list_1 list2 op list_new_res  
 
-let rec expr_sign expr map =
+let rec expr_sign (expr : expr) (map : sign list NameTable.t) : sign list =
   match expr with
   |Num (value) -> 
     if value < 0 then [Neg]  
@@ -63,14 +63,14 @@ let rec expr_sign expr map =
       let list_res = make_sign_operation expr_1_res expr_2_res op [] in
       quicksort list_res      
     
-let apply_condition_sign_type cond map =
+let apply_condition_sign_type (cond : cond) (map : sign list NameTable.t) : bool =
   match cond with
   | (expr_1, comp, expr_2) ->
     let expr_1_res = expr_sign expr_1 map in
     let expr_2_res = expr_sign expr_2 map in
     make_sign_comparaison expr_1_res expr_2_res comp
 
-let has_error_condition_sign_type cond map =
+let has_error_condition_sign_type (cond : cond) (map : sign list NameTable.t) : bool =
   match cond with
   | (expr_1, comp, expr_2) ->
     let expr_1_res = expr_sign expr_1 map in
@@ -79,7 +79,7 @@ let has_error_condition_sign_type cond map =
       true
     else false    
 
-let can_apply_condition_sign_type cond map =
+let can_apply_condition_sign_type (cond : cond) (map : sign list NameTable.t) : bool =
   match cond with
   | (expr_1, comp, expr_2) ->
     let expr_1_res = expr_sign expr_1 map in
@@ -88,7 +88,7 @@ let can_apply_condition_sign_type cond map =
      false
     else true
 
-let rec print_sign list acc = 
+let rec print_sign (list : sign list) (acc : string) : string = 
   match list with
   |[] -> acc
   |x::reste_list -> 
@@ -98,23 +98,24 @@ let rec print_sign list acc =
     | Pos -> print_sign reste_list (acc ^ "+")
     | Error -> print_sign reste_list (acc ^ "!")    
 
-let print_line key value =
+let print_line (key : string) (value : sign list) : unit =
   if List.length value > 0 then
     let () = print_string (key ^ " " ^ (print_sign value "")) in
     print_string "\n"
   else 
     print_string ""
 
-let print_error key value =
+let print_error (key : string) (value : sign list) : unit =
   if List.length value = 0 then
     let () = print_string ("divbyzero " ^ key) in
     print_string "\n";
   else 
     print_string "" 
 
-let element_contains_error key value = List.length value == 0
+let element_contains_error (key : string) (value : sign list) : bool = 
+  List.length value == 0
 
-let find_map map =
+let find_map (map : sign list NameTable.t) : unit =
   NameTable.iter print_line map;
   print_string "\n"; 
   if NameTable.exists element_contains_error map then
@@ -123,7 +124,7 @@ let find_map map =
   else
     print_string "safe\n" 
 
-let rec sign_block list_of_block map = 
+let rec sign_block (list_of_block : program) (map : sign list NameTable.t) : sign list NameTable.t = 
   match list_of_block with
   | [] -> map
   | (position, instruction) :: sub_list_of_block ->
