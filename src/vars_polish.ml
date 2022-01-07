@@ -9,7 +9,8 @@ open Utility_pf5
 (*                             vars_polish                             *)
 (***********************************************************************)
 
-let rec vars_expr expr map = 
+(*Ajoute a la map les variables dans les expressions*)
+let rec vars_expr (expr : expr) (map : string NameTable.t) : string NameTable.t = 
   match expr with
   | Num (value) -> 
     map
@@ -23,19 +24,21 @@ let rec vars_expr expr map =
     let new_map = vars_expr expr_1 map in
     vars_expr expr_2 new_map
 
-let print_first_line key value =
+(*Affiche toute les variables du programmes*)    
+let print_first_line (key : string) (value : string) : unit =
   print_string (key ^ " ")
 
-let print_second_line key value =
+(*Affiche toute les variables non initialisés du programmes*)   
+let print_second_line (key : string) (value : string) : unit =
   print_string value
 
-let find_map map =
+let find_map (map : string NameTable.t) : unit =
     NameTable.iter print_first_line map
 
-let find_map2 map =
+let find_map2 (map : string NameTable.t) : unit =
   NameTable.iter print_second_line map
 
-let rec vars_block list_of_block map = 
+let rec vars_block (list_of_block : program) (map : string NameTable.t) : string NameTable.t = 
   match list_of_block with
   | [] -> map
   | (position, instruction) :: sub_list_of_block ->

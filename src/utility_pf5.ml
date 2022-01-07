@@ -198,7 +198,8 @@ let op_sign_add (expr1 : sign) (expr2 : sign) : sign list =
   | Neg, Pos -> [Neg; Zero; Pos]
   | Error, _
   | _, Error -> [Error]  
-  
+
+(*Renvoie la liste liste de signe en fonction de l operateur*)  
 let op_sign (expr1 : sign) (op : op) (expr2 : sign) : sign list =
   match op with
   | Add -> 
@@ -211,26 +212,34 @@ let op_sign (expr1 : sign) (op : op) (expr2 : sign) : sign list =
     op_sign_div expr1 expr2
   | Mod ->
     op_sign_mod expr1 expr2
-  
+
+(*Renvoie true si expr1 est superieur a expr2
+false sinon*)    
 let comp_sign_gt (expr1 : sign) (expr2 : sign) : bool =
   match expr1, expr2 with
   |Pos, (Neg|Zero)
   |Zero, Neg -> true
   |_, _ -> false  
-  
+
+(*Renvoie true si expr1 est inferieur a expr2
+false sinon*)    
 let comp_sign_lt (expr1 : sign) (expr2 : sign) : bool =
   match expr1, expr2 with
   |(Neg|Zero), Pos
   |Neg, Zero -> true
   |_, _ -> false  
   
+(*Renvoie true si expr1 est egal a expr2
+false sinon*)    
 let comp_sign_eq (expr1 : sign) (expr2 : sign) : bool =
   match expr1, expr2 with
   |Pos, Pos
   |Neg, Neg
   |Zero, Zero -> true
   |_, _ -> false   
-  
+
+(*Renvoie true si la condition est vrai pour expr1 et expr2
+false sinon*)    
 let comp_sign (expr1 : sign) (comp : comp) (expr2 : sign) : bool =
   match comp with
   | (Eq | Ne) -> comp_sign_eq expr1 expr2
@@ -239,7 +248,8 @@ let comp_sign (expr1 : sign) (comp : comp) (expr2 : sign) : bool =
   | Gt -> comp_sign_gt expr1 expr2
   | Ge -> (comp_sign_eq expr1 expr2) || (comp_sign_gt expr1 expr2)
 
-let obtains_sign_from_number (op : op) (num_1 : int) (num_2 : int) : int = 
+(*Renvoie un tableau de sign en fonction de l operation entre deux entiers*)  
+let obtains_sign_from_number (op : op) (num_1 : int) (num_2 : int) : sign list = 
   match op with 
   | Add -> [Pos]
   | Sub -> 
@@ -269,8 +279,9 @@ let obtains_sign_from_number (op : op) (num_1 : int) (num_2 : int) : int =
     else if num_1 * num_2 < 0 then
       [Neg]
     else [Pos]
-    
-let is_sign_inferior_of (x : sign) (y : sign) = 
+
+(*Verifie que x est inferieur a y*)    
+let is_sign_inferior_of (x : sign) (y : sign) : bool = 
   match x, y with
   | Neg, (Zero | Pos | Error) 
   | Zero, (Pos | Error) 
@@ -282,11 +293,11 @@ let is_sign_inferior_of (x : sign) (y : sign) =
   | _, _ -> false     
 
 (*Renvoie une liste de mot sans les espaces*)
-let make_list_string_list_without_space string = 
+let make_list_string_list_without_space (string : string) : string list = 
   String.split_on_char ' ' string
 
 (*Renvoie une liste de mot sans le premiers mot*)  
-let rec list_without_first_word list_of_word iteration res_list = 
+let rec list_without_first_word (list_of_word : string list) (iteration : int) (res_list : string list) : string list = 
   match list_of_word with
   | [] -> res_list
   | word::sub_list_of_word ->
@@ -296,30 +307,30 @@ let rec list_without_first_word list_of_word iteration res_list =
       list_without_first_word sub_list_of_word (iteration + 1) (word :: res_list)
 
 (*Renvoie une liste de mot sans le premiers mot et dans l'ordre*)       
-let list_without_first_word_clean list_of_word iteration res_list = 
+let list_without_first_word_clean (list_of_word : string list) (iteration : int) (res_list : string list) : string list = 
   let list = list_without_first_word list_of_word iteration res_list in
   List.rev list 
 
 (*Renvoie une liste de mot sans les espaces et sans le premiers mot*)  
-let make_list_string_list_without_space_and_first_word string = 
+let make_list_string_list_without_space_and_first_word (string : string) : string list = 
   let list_of_word = make_list_string_list_without_space string in 
   list_without_first_word_clean list_of_word 0 [] 
 
 (*Renvoie le premier mot de la liste de ligne*)  
-let first_word_of_file_line string = 
+let first_word_of_file_line (string : string) : string = 
   List.hd (make_list_string_list_without_space string)
 
 (*construit une liste de ligne*)  
-let construct_file_line position indentation content =  
+let construct_file_line (position : int) (indentation : int) (content : string) : file_line =  
   {position = position; indentation = indentation; content = content}
 
 (*Ajoute une ligne a la liste de ligne*)
-let add_file_line_to_list position indentation content list =
+let add_file_line_to_list (position : int) (indentation : int) (content : string) (list : file_line list) : file_line list =
   let file_line = construct_file_line position indentation content in
   file_line::list
 
 (*Renvoie l indentation de la ligne*)  
-let rec get_indentation_from_line line count =
+let rec get_indentation_from_line (line : string) (count : int) : int =
   let line_size = String.length line in
     if line_size = 0 then
       count
@@ -331,7 +342,7 @@ let rec get_indentation_from_line line count =
 
 (*renvoie la liste de mot sans "number"
 premiers mots*)        
-let rec skip_element list_of_word number =
+let rec skip_element (list_of_word : string list) (number : int) : string list =
   if number <= 0 then
     list_of_word
   else
@@ -339,7 +350,7 @@ let rec skip_element list_of_word number =
     skip_element list (number-1)
 
 (*Pour obtenir la liste de ligne d un "while" ou d un "if"*)     
-let rec obtain_sub_block list_of_file_line indentation list_result = 
+let rec obtain_sub_block (list_of_file_line : file_line list) (indentation : int) (list_result : file_line list) : file_line list = 
   match list_of_file_line with 
   | [] -> list_result
   | file_line :: sub_list_of_file_line ->
@@ -349,12 +360,12 @@ let rec obtain_sub_block list_of_file_line indentation list_result =
       obtain_sub_block sub_list_of_file_line indentation (file_line :: list_result)
 
 (*Pour obtenir la liste de ligne d un "while" ou d un "if" dans le bon ordre*)       
-let obtain_sub_block_clean list_of_file_line indentation list_result = 
+let obtain_sub_block_clean (list_of_file_line : file_line list) (indentation : int) (list_result : file_line list) : file_line list = 
   let list = obtain_sub_block list_of_file_line indentation list_result in
   List.rev list
   
 (*Pour obtenir la liste de ligne du "else"*)  
-let rec obtain_else_sub_block list_of_file_line indentation list_result else_was_readed = 
+let rec obtain_else_sub_block (list_of_file_line : file_line list) (indentation : int) (list_result : file_line list) (else_was_readed : bool) : file_line list = 
   match list_of_file_line with 
   | [] -> list_result
   | file_line :: sub_list_of_file_line ->
@@ -369,8 +380,9 @@ let rec obtain_else_sub_block list_of_file_line indentation list_result else_was
         
       else
         obtain_else_sub_block sub_list_of_file_line indentation list_result else_was_readed     
-        
-let rec compare_list list_1 list_2 = 
+
+(*Renvoie true si deux liste sont identique, false sinon*)        
+let rec compare_list (list_1 : 'a list) (list_2 : 'a list) : bool = 
   match list_1, list_2 with
   | [], [] -> true
   | list, [] 
@@ -379,7 +391,8 @@ let rec compare_list list_1 list_2 =
     if x = y then compare_list sub_list_1 sub_list_2
     else false 
 
-let rec avoid_duplicate_sign_type_in_list list list_res =
+(*Renvoie une sign list sans doublons*)      
+let rec avoid_duplicate_sign_type_in_list (list : sign list) (list_res : sign list) : sign list =
   match list with 
   | [] -> list_res
   | x :: sub_list ->
@@ -388,8 +401,9 @@ let rec avoid_duplicate_sign_type_in_list list list_res =
     else 
         avoid_duplicate_sign_type_in_list sub_list (x::list_res)          
       
-    
-let rec quicksort list = 
+
+(*Trie une liste rapidement*)        
+let rec quicksort (list : 'a list) : 'a list = 
   match list with
   | [] -> []
   | [element] -> [element]
