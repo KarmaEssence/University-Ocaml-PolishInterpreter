@@ -74,10 +74,6 @@ let rec construct_expression list_of_word =
 
   else if is_number first_word_list_of_char then
     
-    (*let test = ("Mon premier mot est : " ^ first_word) in 
-    print_string "\n";
-    print_string test;
-    print_string "\n";*)
     Num (int_of_string first_word)
 
   else  
