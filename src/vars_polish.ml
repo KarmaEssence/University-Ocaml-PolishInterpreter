@@ -24,6 +24,12 @@ let rec vars_expr (expr : expr) (map : string NameTable.t) : string NameTable.t 
     let new_map = vars_expr expr_1 map in
     vars_expr expr_2 new_map
 
+let vars_cond (cond : cond) (map : string NameTable.t) : string NameTable.t = 
+  match cond with
+  | (expr_1, comp, expr_2) ->
+  let new_map = vars_expr expr_1 map in
+  vars_expr expr_2 new_map   
+
 (*Affiche toute les variables du programmes*)    
 let print_first_line (key : string) (value : string) : unit =
   print_string (key ^ " ")
@@ -64,12 +70,14 @@ let rec vars_block (list_of_block : program) (map : string NameTable.t) : string
       vars_block sub_list_of_block map
 
     | If (cond, block_1, block_2) ->
-      let new_map = vars_block block_1 map in
+      let cond_map = vars_cond cond map in
+      let new_map = vars_block block_1 cond_map in
       let new_map2 = vars_block block_2 new_map in
       vars_block sub_list_of_block new_map2
       
     | While (cond, block) ->
-      let new_map = vars_block block map in
+      let cond_map = vars_cond cond map in
+      let new_map = vars_block block cond_map in
       vars_block sub_list_of_block new_map
       
 (*affiche deux lignes, la première affiche toute
