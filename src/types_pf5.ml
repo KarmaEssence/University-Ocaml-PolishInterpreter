@@ -36,6 +36,7 @@ type instr =
   | While of cond * block
 and block = (position * instr) list
 
+(** Sign *)
 type sign =
 | Neg
 | Zero
@@ -44,5 +45,9 @@ type sign =
 
 (** Un programme Polish est un bloc d'instructions *)
 type program = block
+
+(** Tout les donnees d une ligne *)
 type file_line = { position : position ; indentation : int; content : string}
+
+(** Map *)
 module NameTable = Map.Make(String);;

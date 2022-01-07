@@ -10,7 +10,7 @@ open Utility_pf5
 (***********************************************************************)
 
 (*Transforme une expression en syntaxe abstraite en syntaxe concrete*)  
-let rec make_string_expression expr = 
+let rec make_string_expression (expr : expr) : string = 
   match expr with
     | Num (value) -> string_of_int value
     | Var (name) -> name
@@ -21,7 +21,7 @@ let rec make_string_expression expr =
       string_op ^ " " ^ string_1 ^ " " ^ string_2
 
 (*Transforme une condition en syntaxe abstraite en syntaxe concrete*)      
-let make_string_condition cond = 
+let make_string_condition (cond : cond) : string = 
   match cond with
   | (expr1, comp, expr2) -> 
      let string_expr1 = make_string_expression expr1 in
@@ -30,7 +30,7 @@ let make_string_condition cond =
      string_expr1 ^ string_comp ^ string_expr2
 
 (*Transforme du code en syntaxe abstraite en syntaxe concrete*)     
-let rec convert_block_to_string list_of_block indentation =
+let rec convert_block_to_string (list_of_block : program) (indentation : int) : file_line list =
   match list_of_block with
     | [] -> []
     | (position, instruction)::sub_list_of_block ->
@@ -52,7 +52,6 @@ let rec convert_block_to_string list_of_block indentation =
            | If (cond, block_if, block_else) ->
              let contents = "IF " ^ make_string_condition cond in
              let line = { position = position; indentation = indentation; content = contents} in
-             (*let lines = [line] @ list_file_lines in *)
              let block_lines_if = convert_block_to_string block_if (indentation + 2) in
              
              if List.length block_else > 0 then
@@ -63,8 +62,7 @@ let rec convert_block_to_string list_of_block indentation =
                let line_else = { position = else_pos; indentation = indentation; content = "ELSE"} in
                let lines_with_else =  line_with_if_block @ [line_else] in
                let line_else_content = lines_with_else @ block_lines_else  in
-               (*block_lines_else @ lines_with_else*)
-                list_file_lines @ line_else_content
+               list_file_lines @ line_else_content
                
              else
                [line] @ block_lines_if
@@ -85,14 +83,14 @@ let rec convert_block_to_string list_of_block indentation =
      ;;
 
 (*Fais des espaces*)
-let rec make_space indentation result = 
+let rec make_space (indentation : int) (result : string) : string = 
   if indentation <= 0 then
     result
   else
     make_space (indentation - 1) (" " ^ result);;
 
 (*Affiche le code ligne par ligne*)    
-let rec print_lines file_lines =
+let rec print_lines (file_lines : file_line list) : unit =
   match file_lines with 
     | [] -> print_string ""
     | element::sub_file_lines ->

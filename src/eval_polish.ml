@@ -13,7 +13,7 @@ open Simpl_polish
 
 (*Evalue le code en syntaxe en abstraite en fonction
 des valeurs contenu dans les variables*)    
-let rec eval_expr expr map = 
+let rec eval_expr (expr : expr) (map : int NameTable.t) : expr = 
   match expr with
   | Num (value) -> 
     Num (value)
@@ -29,14 +29,14 @@ let rec eval_expr expr map =
     let expr_2_res = eval_expr expr_2 map in
     make_simpl_expr op expr_1_res expr_2_res
 
-let eval_condition cond map = 
+let eval_condition (cond : cond) (map : int NameTable.t) : cond = 
   match cond with
   | (expr_1, comp, expr_2) ->
     let expr_1_res = eval_expr expr_1 map in
     let expr_2_res = eval_expr expr_2 map in
     (expr_1_res, comp, expr_2_res)   
 
-let rec eval_block list_of_block map = 
+let rec eval_block (list_of_block : program) (map : int NameTable.t) : int NameTable.t = 
   match list_of_block with
   | [] -> map
   | (position, instruction) :: sub_list_of_block ->

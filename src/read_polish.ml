@@ -60,9 +60,7 @@ let construct_list_of_char_clean string list_of_char =
 (*Renvoie une expression (en syntaxe abstraite)*)    
 let rec construct_expression list_of_word = 
   let first_word = List.hd list_of_word in
-  (*print_string "testttt-3\n";*)
   let first_word_list_of_char = construct_list_of_char first_word [] in
-  (*print_string "testttt-4\n";*)
 
   if is_operator first_word then
 
