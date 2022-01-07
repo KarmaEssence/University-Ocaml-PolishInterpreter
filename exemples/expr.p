@@ -1,5 +1,5 @@
-res := - 0 n
-res1 := n
+res := - 0 0
+res1 := 0
 res2 := - 2 1 
 PRINT + res 1
 IF n < 0

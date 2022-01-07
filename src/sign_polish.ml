@@ -54,7 +54,7 @@ let rec expr_sign (expr : expr) (map : sign list NameTable.t) : sign list =
   |Var(name) -> 
     if NameTable.mem name map then
       NameTable.find name map
-    else []
+    else [Error]
   |Op (op, expr_1, expr_2) -> 
     if is_Num expr_1 && is_Num expr_2 then
       obtains_sign_from_number op (get_expr expr_1) (get_expr expr_2)
@@ -102,11 +102,15 @@ let rec print_sign (list : sign list) (acc : string) : string =
     | Neg -> print_sign reste_list (acc ^ "-")
     | Zero -> print_sign reste_list (acc ^ "0")
     | Pos -> print_sign reste_list (acc ^ "+")
-    | Error -> print_sign reste_list (acc ^ "!")    
+    | Error -> print_sign reste_list (acc ^ "!")   
+    
+(*Verifie si l element contient une erreur*)    
+let element_contains_error (key : string) (value : sign list) : bool = 
+  List.mem Error value    
 
 (*Affiche une ligne avec le numero de la ligne et le sign*)     
 let print_line (key : string) (value : sign list) : unit =
-  if List.length value > 0 then
+  if (element_contains_error key value) = false then
     let () = print_string (key ^ " " ^ (print_sign value "")) in
     print_string "\n"
   else 
@@ -114,15 +118,10 @@ let print_line (key : string) (value : sign list) : unit =
 
 (*Affiche le numero de la ligne et le type de l erreur*)    
 let print_error (key : string) (value : sign list) : unit =
-  if List.length value = 0 then
-    let () = print_string ("divbyzero " ^ key) in
-    print_string "\n";
-  else 
-    print_string "" 
-
-(*Verifie si l element contient une erreur*)    
-let element_contains_error (key : string) (value : sign list) : bool = 
-  List.length value == 0
+  if (element_contains_error key value) = true then
+  let () = print_string ("divbyzero or uninitialized variable (line " ^ key ^ ") ") in
+  print_string "\n"
+  else print_string ""
 
 (*Affiche les lignes en fonction du contenu de la map*)  
 let find_map (map : sign list NameTable.t) : unit =
@@ -147,8 +146,8 @@ let rec sign_block (list_of_block : program) (map : sign list NameTable.t) : sig
       if not (NameTable.exists element_contains_error map) &&
          List.mem Error (NameTable.find name new_map) then
 
-        let new_map_with_error = NameTable.add (string_of_int position) [] new_map in
-        sign_block sub_list_of_block new_map_with_error
+        let new_map_with_error = NameTable.add (string_of_int position) [Error] map in
+        new_map_with_error
 
       else   
         sign_block sub_list_of_block new_map
@@ -172,8 +171,8 @@ let rec sign_block (list_of_block : program) (map : sign list NameTable.t) : sig
           
       else  
         if not (NameTable.exists element_contains_error map) && has_error_condition_sign_type cond map then 
-          let map_with_error = NameTable.add (string_of_int position) [] map in
-          sign_block sub_list_of_block map_with_error
+          let map_with_error = NameTable.add (string_of_int position) [Error] map in
+          map_with_error
           
         else
           let new_map = sign_block block_1 map in
@@ -185,17 +184,15 @@ let rec sign_block (list_of_block : program) (map : sign list NameTable.t) : sig
 
         let new_map = sign_block block map in
         if NameTable.equal compare_list map new_map then
-          let () = print_string "random.org\n" in
-          
           sign_block sub_list_of_block map
+
         else 
-          let () = print_string "je suis la \n" in
           sign_block list_of_block new_map
 
       else  
         if not (NameTable.exists element_contains_error map) && has_error_condition_sign_type cond map then 
-          let map_with_error = NameTable.add (string_of_int position) [] map in
-          sign_block sub_list_of_block map_with_error
+          let map_with_error = NameTable.add (string_of_int position) [Error] map in
+          map_with_error
           
         else
           sign_block sub_list_of_block map
